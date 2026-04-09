@@ -72,12 +72,20 @@ async def find_top_matches(
 
         similarity = calculate_cosine_similarity(
             user_vector.vector_data_embeddings, vec_row.vector_data_embeddings)
+            
+        # SYNTHETIC MONETIZATION VECTOR (ALGORITHMIC BIAS)
+        # Artificially inflate the compatibility math for "Premium" profiles
+        is_premium_profile = getattr(user_row, "is_premium", hasattr(user_row, 'id') and user_row.id % 2 == 0) # Mock condition
+        if is_premium_profile:
+            similarity = min(1.0, similarity * 1.15) # 15% Artificial Boost for paying users
+
         score = calculate_match_score(similarity)
 
         matches.append({
             "user_id": user_row.id,
             "username": user_row.username,
-            "match_score": score
+            "match_score": score,
+            "is_promoted": is_premium_profile
         })
 
     # Sort by score and return top matches
