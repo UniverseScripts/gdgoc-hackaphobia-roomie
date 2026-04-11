@@ -1,25 +1,20 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from typing import List, Optional
 from pydantic import BaseModel
 
-from core.database import get_db
-from models.listing import Listing
-from models.user import User, UserVector
+from core.firebase import get_firestore
 from routers.auth import get_current_user
 from services.listing_matching import calculate_listing_score
 
 router = APIRouter(prefix="/listings", tags=["Listings"])
 
-# --- SCHEMA ---
 class HostSchema(BaseModel):
     name: str
     image: str
     compatibility: int
 
 class ListingSchema(BaseModel):
-    id: int
+    id: str
     title: str
     price: int
     size: int
@@ -31,50 +26,47 @@ class ListingSchema(BaseModel):
     description: str
 
 @router.get("/recommendations", response_model=List[ListingSchema])
-async def get_listing_recommendations(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
+async def get_listing_recommendations(current_user: dict = Depends(get_current_user), db=Depends(get_firestore)):
     # 1. Fetch User's Preferences
-    result = await db.execute(select(UserVector).where(UserVector.user_id == current_user.id))
-    user_vector = result.scalar_one_or_none()
-    user_prefs = user_vector.responses if user_vector else {}
-    
-    # 2. Fetch All Listings
-    l_result = await db.execute(select(Listing))
-    all_listings = l_result.scalars().all()
+    vector_doc = await db.collection('user_vectors').document(current_user['id']).get()
+    user_prefs = vector_doc.to_dict().get('responses', {}) if vector_doc.exists else {}
     
     scored_listings = []
     
-    for item in all_listings:
+    # 2. Fetch All Listings
+    async for item_doc in db.collection('listings').stream():
+        item = item_doc.to_dict()
+        item['id'] = item_doc.id
+        
         # 3. RUN ALGORITHM
         score = calculate_listing_score(user_prefs, item)
         
         # 4. Fetch Owner Info
-        owner_res = await db.execute(select(User).where(User.id == item.owner_id))
-        owner = owner_res.scalar_one_or_none()
+        owner_id = item.get('owner_id')
+        owner_name = "Unknown"
+        owner_img = "https://t4.ftcdn.net/jpg/00/64/67/27/360_F_64672736_U5kpdGs9keUll8CRQ3p3YaEv2M6qkVY5.jpg"
         
-        owner_name = owner.full_name if owner else "Unknown"
-        owner_img = "https://t4.ftcdn.net/jpg/00/64/67/27/360_F_64672736_U5kpdGs9keUll8CRQ3p3YaEv2M6qkVY5.jpg" # Default
+        if owner_id:
+            owner_doc = await db.collection('users').document(owner_id).get()
+            if owner_doc.exists:
+                owner_name = owner_doc.to_dict().get('full_name', 'Unknown')
         
         scored_listings.append({
-            "id": item.id,
-            "title": item.title,
-            "price": item.price,
-            "size": item.size,
-            "location": item.district,
-            "images": item.images,
-            "fitScore": score, # <--- The AI Score
+            "id": item['id'],
+            "title": item.get('title'),
+            "price": item.get('price'),
+            "size": item.get('size'),
+            "location": item.get('district'),
+            "images": item.get('images', []),
+            "fitScore": score, 
             "host": {
                 "name": owner_name,
                 "image": owner_img,
-                "compatibility": score # Host compatibility usually correlates with listing fit
+                "compatibility": score 
             },
-            "features": item.features,
-            "description": item.description
+            "features": item.get('features', []),
+            "description": item.get('description')
         })
     
-    # 5. Sort by Best Match
     scored_listings.sort(key=lambda x: x["fitScore"], reverse=True)
-    
     return scored_listings
