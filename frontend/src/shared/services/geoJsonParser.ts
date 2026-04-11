@@ -26,7 +26,7 @@ export class GeoJsonParser {
    * Directly mounts the GeoJson features onto the Vector Data layer
    */
   static mountToDataLayer(map: google.maps.Map, geoJsonData: FeatureCollection) {
-    if (!map.getData) return;
+    if (!map.data) return;
     map.data.addGeoJson(geoJsonData);
     
     // Establishing distinct visual styling

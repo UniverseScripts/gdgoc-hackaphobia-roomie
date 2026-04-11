@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { getChatHistory, getWebSocketUrl, Message } from '@/services/chatService';
 import { getUserPublicProfile } from '@/services/authService';
 import { MessageSquareDashed, Send, Phone, Video, MoreVertical } from 'lucide-react';
@@ -26,7 +26,7 @@ const getCurrentUserId = () => {
 
 export default function ChatPage() {
   const params = useParams();
-  const router = useRouter();
+  const navigate = useNavigate();
   
   //Handle ID logic
   const rawId = params.partnerId || params.id;
@@ -39,9 +39,9 @@ export default function ChatPage() {
   useEffect(() => {
     if (isNaN(partnerId)) {
       alert("Invalid User ID. returning to matches.");
-      router.push('/matches');
+      navigate('/matches');
     }
-  }, [partnerId, router]);
+  }, [partnerId, navigate]);
 
 // --- FETCH USERNAME HERE ---
   getUserPublicProfile(partnerId)
@@ -128,7 +128,7 @@ export default function ChatPage() {
       {/* Chat Header */}
       <div className="h-16 border-b border-gray-100 flex items-center justify-between px-6 bg-white shrink-0">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="md:hidden -ml-2" onClick={() => router.back()}>
+          <Button variant="ghost" size="icon" className="md:hidden -ml-2" onClick={() => navigate(-1)}>
              ←
           </Button>
           <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600">

@@ -76,7 +76,7 @@ export function Logo({ size = 'md', variant = 'default', showText = true, classN
       <div className={getContainerClasses()}>
         <img 
           src={newLogo.src} 
-          alt="FitNest" 
+          alt="Roomie" 
           className="w-full h-full object-contain" 
         />
         
@@ -92,7 +92,7 @@ export function Logo({ size = 'md', variant = 'default', showText = true, classN
       {showText && (
         <div className="flex flex-col">
           <span className={`font-semibold ${getTextColor()} ${sizes.text} leading-none`}>
-            FitNest
+            Roomie
           </span>
           {(size === 'lg' || size === 'xl') && (
             <span className="text-xs text-muted-foreground leading-none">

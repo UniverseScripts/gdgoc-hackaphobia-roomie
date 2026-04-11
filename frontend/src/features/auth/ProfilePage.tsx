@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Settings, LogOut, User, Bell, Shield, HelpCircle, 
   ChevronRight, Edit3, MapPin, Calendar, Eye, 
@@ -28,7 +28,7 @@ interface UserProfile extends ProfileData {
 }
 
 export default function ProfilePage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -37,7 +37,7 @@ export default function ProfilePage() {
     const loadData = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
-        router.push('/login');
+        navigate('/login');
         return;
       }
 
@@ -72,12 +72,12 @@ export default function ProfilePage() {
     };
 
     loadData();
-  }, [router]);
+  }, [navigate]);
 
   // --- 2. Logout Logic ---
   const handleLogout = () => {
     localStorage.clear(); // Clears token, userId, username, etc.
-    router.replace('/login');
+    navigate('/login', { replace: true });
   };
 
   if (loading) {

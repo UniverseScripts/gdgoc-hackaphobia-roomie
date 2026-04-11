@@ -31,7 +31,7 @@ export const getConversations = async () => {
 // Helper to get the WebSocket URL with authentication
 export const getWebSocketUrl = (userId: number) => {
   // 1. Get the base API URL
-  const BASE_URL = "https://fitnest-backend-7533.onrender.com";
+  const BASE_URL = "https://roomie-backend-7533.onrender.com";
 
   // 2. Convert "http" -> "ws" and "https" -> "wss" automatically
   // This ensures that when you are on Render (https), you get Secure WebSockets (wss)

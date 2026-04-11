@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
-import './app/globals.css'; // Will be moved to src/shared later, keeping temporarily for styles to work
+import './index.css'; // Will be moved to src/shared later, keeping temporarily for styles to work
 
 // Configure QueryClient with aggressive staleTime (5 minutes)
 const queryClient = new QueryClient({

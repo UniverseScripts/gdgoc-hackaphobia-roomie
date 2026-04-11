@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/Logo';
 import { getOnboardingStatus } from '@/services/onBoardingService';
@@ -12,10 +12,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Logo />
           <div className="flex gap-4">
-            <Link href="/login">
+            <Link to="/login">
               <Button variant="ghost">Sign In</Button>
             </Link>
-            <Link href="/signup">
+            <Link to="/signup">
               <Button>Get Started</Button>
             </Link>
           </div>
@@ -36,11 +36,11 @@ export default function LandingPage() {
           </h1>
           
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            FitNest connects you with compatible roommates based on lifestyle, habits, and personality. No more awkward living situations.
+            Roomie connects you with compatible roommates based on lifestyle, habits, and personality. No more awkward living situations.
           </p>
 
           <div className="flex justify-center gap-4 pt-4">
-             <Link href="/signup">
+             <Link to="/signup">
                <Button className="h-12 px-8 text-lg rounded-full">
                  Start Matching <ArrowRight className="ml-2 h-4 w-4" />
                </Button>

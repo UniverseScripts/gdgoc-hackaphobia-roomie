@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/Logo';
 import { Bell, SlidersHorizontal, Search, LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,12 +8,12 @@ import { Input } from '@/components/ui/input';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 export default function MatchesHeader() {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   // --- LOGOUT LOGIC ---
   const handleLogout = () => {
     localStorage.removeItem('token');
-    router.push('/');
+    navigate('/');
   };
 
   return (
@@ -69,7 +69,7 @@ export default function MatchesHeader() {
                 {/* Option 1: Settings */}
                 <DropdownMenu.Item 
                   className="flex items-center gap-2 px-2 py-1.5 text-sm outline-none cursor-pointer rounded-md text-gray-700 focus:bg-gray-100 focus:text-gray-900 transition-colors"
-                  onClick={() => router.push('/profile')}
+                  onClick={() => navigate('/profile')}
                 >
                   <Settings className="h-4 w-4" />
                   <span>Settings</span>
