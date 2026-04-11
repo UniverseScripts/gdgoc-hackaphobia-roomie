@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { submitProfile } from '@/services/onBoardingService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,7 +52,7 @@ const MAJORS = [
 ];
 
 export default function ProfileSetup() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
@@ -78,7 +78,7 @@ export default function ProfileSetup() {
         ...formData,
         age: parseInt(formData.age)
       });
-      router.push('/test');
+      navigate('/test');
     } catch (error) {
       console.error(error);
       alert("Failed to save profile. Please try again.");
@@ -96,7 +96,7 @@ export default function ProfileSetup() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
       <div className="mb-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
         <Logo size="lg" />
-        <h1 className="text-2xl font-bold mt-4 text-gray-900">Welcome to FitNest!</h1>
+        <h1 className="text-2xl font-bold mt-4 text-gray-900">Welcome to Roomie!</h1>
         <p className="text-muted-foreground">Let's build your profile so others can find you.</p>
       </div>
 

@@ -1,15 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { registerUser } from '@/services/authService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Logo } from '@/components/Logo';
 
 export default function SignupPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,7 +20,7 @@ export default function SignupPage() {
 
     try {
       await registerUser(data);
-      router.push('/login'); 
+      navigate('/login'); 
     } catch (err: any) {
       setError('Registration failed. Username may be taken.');
     } finally {
@@ -37,7 +36,7 @@ export default function SignupPage() {
         <div className="p-8">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Create an account</h1>
-            <p className="text-sm text-gray-500 mt-2">Join FitNest to find your perfect match</p>
+            <p className="text-sm text-gray-500 mt-2">Join Roomie to find your perfect match</p>
           </div>
 
           {error && (
@@ -69,7 +68,7 @@ export default function SignupPage() {
 
           <div className="mt-6 text-center text-sm">
             <span className="text-gray-500">Already have an account? </span>
-            <Link href="/login" className="font-semibold text-primary hover:underline">
+            <Link to="/login" className="font-semibold text-primary hover:underline">
               Sign in
             </Link>
           </div>

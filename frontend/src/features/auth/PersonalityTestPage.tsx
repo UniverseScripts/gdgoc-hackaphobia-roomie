@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { submitAssessment, checkTestStatus, TestSubmission } from '@/services/testService';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -81,7 +81,7 @@ const districts = [
 ];
 
 export default function PersonalityTest() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -93,15 +93,15 @@ export default function PersonalityTest() {
     const init = async () => {
       try {
         const status = await checkTestStatus();
-        if (status.completed) router.push('/matches'); 
+        if (status.completed) navigate('/matches'); 
       } catch (error) {
-        router.push('/login');
+        navigate('/login');
       } finally {
         setLoading(false);
       }
     };
     init();
-  }, [router]);
+  }, [navigate]);
 
   const handleOptionSelect = (key: string, value: string) => {
     setFormData({ ...formData, [key]: value });
@@ -117,7 +117,7 @@ export default function PersonalityTest() {
       try {
         // Ensure all fields are present (defaulting if skipped, though UI prevents skipping)
         await submitAssessment(formData as TestSubmission);
-        router.push('/matches');
+        navigate('/matches');
       } catch (error) {
         alert("Submission failed. Please try again.");
       } finally {

@@ -1,11 +1,12 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, Search, MessageCircle, User } from 'lucide-react';
 
 export default function BottomNav() {
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const pathname = location.pathname;
 
   // Hide Bottom Nav on specific pages (like Auth or Landing)
   if (['/', '/login', '/signup', '/test', '/onboarding/profile'].includes(pathname)) return null;
@@ -25,7 +26,7 @@ export default function BottomNav() {
           return (
             <button
               key={item.label}
-              onClick={() => router.push(item.path)}
+              onClick={() => navigate(item.path)}
               className={`flex flex-col items-center gap-1 transition-all duration-200 ${
                 isActive ? 'text-primary scale-105' : 'text-gray-400 hover:text-gray-600'
               }`}

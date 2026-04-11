@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { loginUser } from '@/services/authService';
 import { getOnboardingStatus } from '@/services/onBoardingService'; 
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import { Logo } from '@/components/Logo';
 import { ArrowRight, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -32,13 +31,13 @@ export default function LoginPage() {
       // 3. Smart Redirection Logic
       if (!status.profile_completed) {
         // Case 1: New Account -> Needs Profile
-        router.push('/onboarding/profile');
+        navigate('/onboarding/profile');
       } else if (!status.test_completed) {
         // Case 1.5: Profile Done -> Needs Personality Test
-        router.push('/test');
+        navigate('/test');
       } else {
         // Case 2: Everything Done -> Go to App
-        router.push('/explore'); 
+        navigate('/explore'); 
       }
 
     } catch (err) {
@@ -85,7 +84,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center text-sm">
             <span className="text-gray-500">Don't have an account? </span>
-            <Link href="/signup" className="font-semibold text-primary hover:underline">
+            <Link to="/signup" className="font-semibold text-primary hover:underline">
               Sign up
             </Link>
           </div>

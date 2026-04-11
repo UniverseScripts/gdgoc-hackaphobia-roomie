@@ -16,7 +16,7 @@ export const useChatSocket = (userId: number | null, token: string | null) => {
 
     // Connect to FastAPI WebSocket endpoint
     // 1. Get the base API URL (Localhost or Cloud)
-    const BASE_URL = "https://fitnest-backend-7533.onrender.com";
+    const BASE_URL = "https://roomie-backend-7533.onrender.com";
 
     // 2. Convert "http" -> "ws" and "https" -> "wss" automatically
     // This ensures that when you are on Render (https), you get Secure WebSockets (wss)

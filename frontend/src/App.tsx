@@ -1,25 +1,38 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Placeholder route imports (to be implemented during feature restructure)
-// import LandingPage from './app/page';
-// import LoginPage from './app/login/page';
-// import SignupPage from './app/signup/page';
-// import MatchesPage from './app/matches/page';
-// import ExplorePage from './app/explore/page';
+import HomePage from './features/properties/HomePage';
+import ExplorePage from './features/properties/ExplorePage';
+import LoginPage from './features/auth/LoginPage';
+import SignupPage from './features/auth/SignupPage';
+import ProfilePage from './features/auth/ProfilePage';
+import OnboardingProfilePage from './features/auth/OnboardingProfilePage';
+import PersonalityTestPage from './features/auth/PersonalityTestPage';
+import MatchesPage from './features/matching/MatchesPage';
+import ChatListPage from './features/matching/ChatListPage';
+import ChatRoomPage from './features/matching/ChatRoomPage';
+
+import BottomNav from './components/BottomNav';
 
 export default function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<div>Landing Page</div>} />
-        <Route path="/login" element={<div>Login Route</div>} />
-        <Route path="/signup" element={<div>Signup Route</div>} />
-        <Route path="/matches" element={<div>Matches Route</div>} />
-        <Route path="/explore" element={<div>Explore Route</div>} />
-        <Route path="/profile" element={<div>Profile Route</div>} />
-        <Route path="/chat" element={<div>Chat Route</div>} />
-      </Routes>
+      <div className="flex flex-col min-h-screen">
+        <main className="flex-1">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/onboarding/profile" element={<OnboardingProfilePage />} />
+            <Route path="/test" element={<PersonalityTestPage />} />
+            <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/matches" element={<MatchesPage />} />
+            <Route path="/chat" element={<ChatListPage />} />
+            <Route path="/chat/:partnerId" element={<ChatRoomPage />} />
+          </Routes>
+        </main>
+        <BottomNav />
+      </div>
     </Router>
   );
 }

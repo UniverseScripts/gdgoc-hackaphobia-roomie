@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, MessageSquareDashed, Clock, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { getConversations, ConversationPreview } from '@/services/chatService';
 
 export default function ChatListPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [conversations, setConversations] = useState<ConversationPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,7 +82,7 @@ export default function ChatListPage() {
             {filteredChats.map((chat) => (
               <div 
                 key={chat.partner_id}
-                onClick={() => router.push(`/chat/${chat.partner_id}`)}
+                onClick={() => navigate(`/chat/${chat.partner_id}`)}
                 className="group flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors"
               >
                 {/* Avatar */}
@@ -140,7 +140,7 @@ export default function ChatListPage() {
               Matches you interact with will appear here. Go explore to find new roommates!
             </p>
             <button 
-              onClick={() => router.push('/explore')}
+              onClick={() => navigate('/explore')}
               className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors"
             >
               Start Matching

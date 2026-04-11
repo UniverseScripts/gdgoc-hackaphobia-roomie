@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { getExploreProfiles } from '@/services/exploreService'; 
 import MatchesHeader from '@/components/MatchesHeader';
 import { Card } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Star, ArrowRight, X, MapPin, Home, User, MessageCircle} from 'lucide-react';
 
 export default function MatchesPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   
   // --- STATE ---
   const [studentCount, setStudentCount] = useState(0); 
@@ -85,7 +85,7 @@ export default function MatchesPage() {
               
               <div className="flex gap-4">
                  <Button 
-                    onClick={() => router.push('/explore')} 
+                    onClick={() => navigate('/explore')} 
                     variant="secondary" 
                     size="lg" 
                     className="rounded-full gap-2 font-semibold shadow-lg hover:scale-105 transition-transform"
@@ -162,7 +162,7 @@ export default function MatchesPage() {
                                className="shrink-0 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100 shadow-sm transition-colors"
                                onClick={(e) => {
                                  e.stopPropagation();
-                                 router.push(`/chat/${item.id}`);
+                                 navigate(`/chat/${item.id}`);
                                }}
                                title="Message"
                              >
@@ -170,7 +170,7 @@ export default function MatchesPage() {
                              </Button>
                            )}
                            <Button 
-                              onClick={() => router.push('/explore')} 
+                              onClick={() => navigate('/explore')} 
                               className="flex-1 rounded-xl gap-2 bg-gray-900 text-white hover:bg-blue-600 transition-all"
                             >
                               View Details <ArrowRight className="w-4 h-4" />
@@ -191,7 +191,7 @@ export default function MatchesPage() {
               <p className="text-gray-500 max-w-md mx-auto mb-6">
                 Go to the Explore page to swipe through roommates and listings. Tap the star icon to save them here for later!
               </p>
-              <Button onClick={() => router.push('/explore')} variant="outline" className="rounded-full">
+              <Button onClick={() => navigate('/explore')} variant="outline" className="rounded-full">
                 Go to Explore
               </Button>
             </div>

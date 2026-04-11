@@ -3,7 +3,7 @@ import axios from 'axios';
 // 1. Define the Base URL
 // Local: http://localhost:8000
 // Cloud (Later): https://your-oracle-ip.com/api
-const API_URL = 'https://fitnest-backend-7533.onrender.com';
+const API_URL = 'https://roomie-backend-7533.onrender.com';
 
 const api = axios.create({
   baseURL: API_URL,
