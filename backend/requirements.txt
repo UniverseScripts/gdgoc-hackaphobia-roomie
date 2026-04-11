@@ -1,8 +1,14 @@
 fastapi[standard]
 uvicorn[standard]
 firebase-admin>=6.5.0
+firebase-functions>=0.1.0
+google-cloud-aiplatform>=1.38.0
 python-multipart
 pydantic[email]
 numpy
 pydantic-settings
 python-dotenv
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-instrumentation-fastapi
+opentelemetry-exporter-gcp-trace
