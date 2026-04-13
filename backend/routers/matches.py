@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from typing import List, Optional
 from pydantic import BaseModel
 
-from core.firebase import get_firestore
+from core.config import db
 from routers.auth import get_current_user
 
 from services.matching import (
@@ -25,8 +25,8 @@ class MatchProfileSchema(BaseModel):
     avatar_url: str 
 
 @router.get("/my-matches", response_model=List[MatchProfileSchema])
-async def get_my_matches(current_user: dict = Depends(get_current_user), db=Depends(get_firestore)):
-    my_vector_doc = await db.collection('user_vectors').document(current_user['id']).get()
+async def get_my_matches(current_user: dict = Depends(get_current_user)):
+    my_vector_doc = db.collection('user_vectors').document(current_user['id']).get()
     
     if not my_vector_doc.exists:
         return []

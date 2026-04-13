@@ -1,4 +1,18 @@
 from typing import List, Dict
+import functools
+from vertexai.language_models import TextEmbeddingModel
+
+# Initialize the embedding model
+embedding_model = TextEmbeddingModel.from_pretrained("textembedding-gecko@003")
+
+@functools.lru_cache(maxsize=128)
+def generate_semantic_vector(text: str) -> List[float]:
+    """
+    Generate dense vectors from a natural language query via Vertex AI.
+    Cached explicitly to prevent redundant identical calls.
+    """
+    embeddings = embedding_model.get_embeddings([text])
+    return embeddings[0].values
 
 # --- 1. SLEEP SCHEDULE ---
 SLEEP_MAP = {

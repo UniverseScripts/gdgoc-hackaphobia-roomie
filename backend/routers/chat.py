@@ -7,7 +7,7 @@ from starlette import status
 from google.cloud.firestore_v1.base_query import FieldFilter, Or
 
 from services.chat_manager import manager
-from core.firebase import get_firestore, get_firestore_sync
+from core.config import db
 from routers.auth import get_current_user, SECRET_KEY, ALGORITHM
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
@@ -29,7 +29,7 @@ class ConversationSchema(BaseModel):
     is_online: bool = False
 
 @router.get("/conversations", response_model=List[ConversationSchema])
-async def get_conversations(current_user: Annotated[dict, Depends(get_current_user)], db=Depends(get_firestore)):
+async def get_conversations(current_user: Annotated[dict, Depends(get_current_user)]):
     current_uid = current_user['id']
     
     # Find all messages where user is sender OR receiver
@@ -42,7 +42,7 @@ async def get_conversations(current_user: Annotated[dict, Depends(get_current_us
     conversations_map: Dict[str, dict] = {}
     
     # Aggregate to find partners and latest messages
-    async for msg_doc in messages_stream:
+    for msg_doc in messages_stream:
         msg = msg_doc.to_dict()
         partner_id = msg['receiver_id'] if msg['sender_id'] == current_uid else msg['sender_id']
         
@@ -56,7 +56,7 @@ async def get_conversations(current_user: Annotated[dict, Depends(get_current_us
     
     # Fetch partner details
     for partner_id, data in conversations_map.items():
-        partner_doc = await db.collection('users').document(partner_id).get()
+        partner_doc = db.collection('users').document(partner_id).get()
         if not partner_doc.exists:
             continue
             
@@ -77,7 +77,7 @@ async def get_conversations(current_user: Annotated[dict, Depends(get_current_us
     return conversations
 
 @router.get("/history/{partner_id}", response_model=List[MessageSchema])
-async def get_chat_history(partner_id: str, current_user: Annotated[dict, Depends(get_current_user)], db=Depends(get_firestore)):
+async def get_chat_history(partner_id: str, current_user: Annotated[dict, Depends(get_current_user)]):
     current_uid = current_user['id']
     
     # Fetch all messages between these two users
@@ -86,11 +86,11 @@ async def get_chat_history(partner_id: str, current_user: Annotated[dict, Depend
     
     # Note: Firestore requires composite indexes for complex ORs. 
     # For a chat app, fetching both streams and sorting in memory is often faster and avoids index hell.
-    sent_stream = [doc.to_dict() | {'id': doc.id} async for doc in db.collection('messages')
+    sent_stream = [doc.to_dict() | {'id': doc.id} for doc in db.collection('messages')
                    .where(filter=FieldFilter("sender_id", "==", current_uid))
                    .where(filter=FieldFilter("receiver_id", "==", partner_id)).stream()]
                    
-    received_stream = [doc.to_dict() | {'id': doc.id} async for doc in db.collection('messages')
+    received_stream = [doc.to_dict() | {'id': doc.id} for doc in db.collection('messages')
                        .where(filter=FieldFilter("sender_id", "==", partner_id))
                        .where(filter=FieldFilter("receiver_id", "==", current_uid)).stream()]
     
@@ -113,7 +113,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str):
         return
 
     await manager.connect(websocket, user_id)
-    db_sync = get_firestore_sync() # Use sync client for tight WS loop
+    
 
     try:
         while True:
@@ -133,7 +133,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str):
                     "content": content,
                     "timestamp": datetime.now(timezone.utc)
                 }
-                db_sync.collection('messages').add(new_msg)
+                db.collection('messages').add(new_msg)
             except Exception as db_error:
                 print(f"Database error: {db_error}")
                 continue
