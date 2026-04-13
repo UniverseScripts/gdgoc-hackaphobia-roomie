@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from core.firebase import get_firestore
+from core.config import db
 from schemas.test import TestSubmission
 from services.vector_logic import processing_submissions
 from routers.auth import get_current_user
@@ -10,8 +10,8 @@ user_dependencies = Annotated[dict, Depends(get_current_user)]
 router = APIRouter(prefix="/test", tags=["Test"])
 
 @router.get("/status")
-async def check_test_status(user: user_dependencies, db=Depends(get_firestore)):
-    vector_doc = await db.collection('user_vectors').document(user['id']).get()
+async def check_test_status(user: user_dependencies):
+    vector_doc = db.collection('user_vectors').document(user['id']).get()
 
     if vector_doc.exists and vector_doc.to_dict().get('is_completed') is True:
         return {"completed": True}
@@ -19,9 +19,9 @@ async def check_test_status(user: user_dependencies, db=Depends(get_firestore)):
     return {"completed": False}
 
 @router.post("/submit")
-async def submit_assessment(submission: TestSubmission, user: user_dependencies, db=Depends(get_firestore)):
+async def submit_assessment(submission: TestSubmission, user: user_dependencies):
     user_vector_ref = db.collection('user_vectors').document(user['id'])
-    vector_doc = await user_vector_ref.get()
+    vector_doc = user_vector_ref.get()
 
     if vector_doc.exists and vector_doc.to_dict().get('is_completed') is True:
         raise HTTPException(
@@ -40,6 +40,6 @@ async def submit_assessment(submission: TestSubmission, user: user_dependencies,
     }
 
     # Use merge=True so we act like an upsert (create if missing, update if exists)
-    await user_vector_ref.set(vector_data, merge=True)
+    user_vector_ref.set(vector_data, merge=True)
 
     return {"message": "Assessment saved successfully", "vector_generated": math_vector}

@@ -20,3 +20,11 @@ async def verify_firebase_token(token: Annotated[HTTPAuthorizationCredentials, D
         return authenticate
     except Exception:
         raise credentials_exception
+
+async def verify_landlord_claim(token: dict = Depends(verify_firebase_token)):
+    if token.get("role") != "landlord":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Insufficient supply-side privileges"
+        )
+    return token

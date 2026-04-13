@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Annotated
 
-from core.firebase import get_firestore
+from core.config import db
 from routers.auth import get_current_user
 from schemas.onboarding import ProfileCreate
 
@@ -10,8 +10,7 @@ router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
 @router.post("/profile")
 async def update_profile(
     data: ProfileCreate,
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db=Depends(get_firestore)
+    current_user: Annotated[dict, Depends(get_current_user)]
 ):
     user_ref = db.collection('users').document(current_user['id'])
     
@@ -25,7 +24,7 @@ async def update_profile(
         "profile_completed": True
     }
     
-    await user_ref.update(update_data)
+    user_ref.update(update_data)
     return {"message": "Profile updated successfully"}
 
 @router.get("/profile")
@@ -42,10 +41,9 @@ async def get_profile(current_user: Annotated[dict, Depends(get_current_user)]):
     
 @router.get("/status")
 async def get_onboarding_status(
-    current_user: Annotated[dict, Depends(get_current_user)],
-    db=Depends(get_firestore)
+    current_user: Annotated[dict, Depends(get_current_user)]
 ):
-    vector_doc = await db.collection('user_vectors').document(current_user['id']).get()
+    vector_doc = db.collection('user_vectors').document(current_user['id']).get()
     test_done = False
     
     if vector_doc.exists:
