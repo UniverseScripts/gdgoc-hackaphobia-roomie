@@ -1,19 +1,17 @@
-import asyncio
-import sys
 import os
+import random
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-# Ensure we can import from folders like 'routers' and 'models'
-sys.path.append(os.getcwd())
+# PHASE 2: Hardcode Emulator variable to ensure local isolated execution
+os.environ["FIRESTORE_EMULATOR_HOST"] = "localhost:8080"
 
-from sqlalchemy import select
-from core.database import AsyncLocalSession, engine, Base
-from models.listing import Listing
-from models.user import User
+# Initialize Firebase Admin using default app behavior (no explicit cred for emulator)
+if not firebase_admin._apps:
+    firebase_admin.initialize_app()
 
-# 🟢 FIX: Import the hash tool from your existing auth.py
-from routers.auth import bycrypt_context 
+db = firestore.client()
 
-# --- MOCK DATA ---
 LISTINGS_DATA = [
     {
         "title": "Sunlit Studio in District 1",
@@ -22,7 +20,7 @@ LISTINGS_DATA = [
         "district": "District 1",
         "images": ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80"],
         "features": ["Air Conditioning", "WiFi", "Balcony"],
-        "description": "A beautiful sunlit studio perfect for students."
+        "description": "A beautiful sunlit studio perfect for students looking for natural lighting."
     },
     {
         "title": "Modern 2-Bedroom Condo",
@@ -31,7 +29,7 @@ LISTINGS_DATA = [
         "district": "District 2",
         "images": ["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80"],
         "features": ["Gym", "Pool", "Parking"],
-        "description": "Luxury living with gym and pool access."
+        "description": "Luxury living with gym and pool access perfect for young professionals."
     },
     {
         "title": "Cozy Loft near RMIT",
@@ -40,79 +38,27 @@ LISTINGS_DATA = [
         "district": "District 7",
         "images": ["https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80"],
         "features": ["High Ceilings", "Smart TV"],
-        "description": "Stylish loft apartment with high ceilings."
-    },
-    {
-        "title": "Student Shared Room",
-        "price": 4000000,
-        "size": 25,
-        "district": "Binh Thanh",
-        "images": ["https://images.unsplash.com/photo-1593696140829-c38b56919eb3?w=800&q=80"],
-        "features": ["Shared Kitchen", "Utilities Included"],
-        "description": "Shared room in a friendly student house."
-    },
-    {
-        "title": "Minimalist Apartment",
-        "price": 11000000,
-        "size": 50,
-        "district": "District 3",
-        "images": ["https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&q=80"],
-        "features": ["Pet Friendly", "Elevator"],
-        "description": "Quiet area, newly renovated."
+        "description": "Stylish loft apartment with high ceilings in a quiet neighborhood."
     }
 ]
 
-async def seed():
-    print("🌱 Starting Seed Process...")
-
-    # 1. Create Tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    async with AsyncLocalSession() as db:
-        # 2. Create Dummy Host
-        result = await db.execute(select(User).where(User.username == "host_user"))
-        host = result.scalars().first()
-
-        if not host:
-            print("👤 Creating dummy host user...")
-            
-            # 🟢 FIX: Use the hash feature from auth.py
-            hashed_pw = bycrypt_context.hash("password123")
-            
-            host = User(
-                username="host_user",
-                email="host@fitnest.com",
-                hashed_password=hashed_pw, # <--- Used here
-                full_name="FitNest Host",
-                age=30,
-                gender="Male",
-                university="N/A",
-                major="Property Manager",
-            )
-            db.add(host)
-            await db.commit()
-            await db.refresh(host)
+def seed_firestore():
+    print("🌱 Starting Seed Process for Firestore Emulator...")
+    print(f"Targeting Emulator: {os.environ.get('FIRESTORE_EMULATOR_HOST')}")
+    
+    properties_ref = db.collection('properties')
+    
+    # Clear existing listings to avoid duplicates in dev
+    docs = properties_ref.limit(10).stream()
+    for doc in docs:
+        doc.reference.delete()
         
-        print(f"✅ Using Host ID: {host.id}")
-
-        # 3. Insert Listings
-        print(f"📦 Inserting {len(LISTINGS_DATA)} listings...")
+    for item in LISTINGS_DATA:
+        # Pushing data to Firestore
+        properties_ref.add(item)
+        print(f"✅ Inserted property: {item['title']}")
         
-        for item in LISTINGS_DATA:
-            # Check for duplicates
-            existing = await db.execute(select(Listing).where(Listing.title == item["title"]))
-            if existing.scalars().first():
-                continue
-
-            listing = Listing(
-                owner_id=host.id,
-                **item
-            )
-            db.add(listing)
-        
-        await db.commit()
-        print("🎉 Listings inserted successfully!")
+    print("🎉 Mock listings seeded perfectly into Firestore Emulator!")
 
 if __name__ == "__main__":
-    asyncio.run(seed())
+    seed_firestore()

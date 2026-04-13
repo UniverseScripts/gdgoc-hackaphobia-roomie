@@ -1,88 +1,70 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from typing import List, Optional
 from pydantic import BaseModel
 
-from core.database import get_db
-from models.user import User, UserVector
+from core.firebase import get_firestore
 from routers.auth import get_current_user
 
 from services.matching import (
     calculate_cosine_similarity, 
     calculate_match_score,
-    get_candidate_vectors
+    get_candidate_vectors # You will need to update this service file to query Firestore too!
 )
-
 
 router = APIRouter(prefix="/matches", tags=["Matches"])
 
-# --- UPDATED SCHEMA (Real Data) ---
 class MatchProfileSchema(BaseModel):
-    user_id: int
+    user_id: str
     username: str
     full_name: Optional[str] = None
     age: Optional[int] = None
     university: Optional[str] = None
     major: Optional[str] = None
-    district: Optional[str] = "Ho Chi Minh City" # Default fallback
+    district: Optional[str] = "Ho Chi Minh City" 
     match_score: int
     avatar_url: str 
 
 @router.get("/my-matches", response_model=List[MatchProfileSchema])
-async def get_my_matches(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    # 1. Get Current User's Vector
-    result = await db.execute(select(UserVector).where(UserVector.user_id == current_user.id))
-    my_vector_row = result.scalar_one_or_none()
+async def get_my_matches(current_user: dict = Depends(get_current_user), db=Depends(get_firestore)):
+    my_vector_doc = await db.collection('user_vectors').document(current_user['id']).get()
     
-    # If I haven't taken the test, I can't be matched
-    if not my_vector_row or not my_vector_row.vector_data_embeddings:
+    if not my_vector_doc.exists:
+        return []
+        
+    my_vector_data = my_vector_doc.to_dict().get('vector_data_embeddings')
+    if not my_vector_data:
         return []
 
-    my_vector_data = my_vector_row.vector_data_embeddings
-
-    # 2. Get All Candidates (Optimized Fetch from matching.py)
-    # This returns a list of tuples: [(UserVector, User), ...]
-    candidates = await get_candidate_vectors(db, current_user.id)
+    # get_candidate_vectors needs to be rewritten in matching.py to return lists of dicts from Firestore
+    candidates = await get_candidate_vectors(db, current_user['id'])
     
     matches = []
     
-    for user_vector, user in candidates:
-        # Safety Check: Skip if candidate has no vector data
-        if not user_vector.vector_data_embeddings:
+    for candidate_vector, candidate_user in candidates:
+        candidate_embeddings = candidate_vector.get('vector_data_embeddings')
+        if not candidate_embeddings:
             continue
 
-        # --- 3. APPLY THE ALGORITHM ---
-        similarity = calculate_cosine_similarity(
-            my_vector_data, 
-            user_vector.vector_data_embeddings
-        )
+        similarity = calculate_cosine_similarity(my_vector_data, candidate_embeddings)
         real_score = calculate_match_score(similarity)
 
-        # 4. Get Metadata (District)
         district = "Ho Chi Minh City"
-        if user_vector.responses:
-             district = user_vector.responses.get('district', district)
+        if candidate_vector.get('responses'):
+             district = candidate_vector['responses'].get('district', district)
 
-        # 5. Build Profile Object
         avatar = "https://t4.ftcdn.net/jpg/00/64/67/27/360_F_64672736_U5kpdGs9keUll8CRQ3p3YaEv2M6qkVY5.jpg"
 
         matches.append({
-            "user_id": user.id,
-            "username": user.username,
-            "full_name": user.full_name or user.username,
-            "age": user.age or 20,
-            "university": user.university or "University",
-            "major": user.major or "Student",
+            "user_id": candidate_user['id'],
+            "username": candidate_user.get('username'),
+            "full_name": candidate_user.get('full_name') or candidate_user.get('username'),
+            "age": candidate_user.get('age') or 20,
+            "university": candidate_user.get('university') or "University",
+            "major": candidate_user.get('major') or "Student",
             "district": district,
-            "match_score": real_score, # <--- The calculated score
+            "match_score": real_score, 
             "avatar_url": avatar
         })
         
-    # 6. Sort by Highest Match Score
     matches.sort(key=lambda x: x["match_score"], reverse=True)
-    
     return matches
