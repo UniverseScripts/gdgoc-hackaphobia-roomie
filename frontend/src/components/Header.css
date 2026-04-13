@@ -24,7 +24,7 @@
 /* ── Logo ── */
 .header__logo {
   flex-shrink: 0;
-  line-height: 0;
+  line-height: 20;
 }
 
 .header__logo img {
