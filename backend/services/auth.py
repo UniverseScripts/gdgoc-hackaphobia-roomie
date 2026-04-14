@@ -28,3 +28,19 @@ async def verify_landlord_claim(token: dict = Depends(verify_firebase_token)):
             detail="Insufficient supply-side privileges"
         )
     return token
+
+async def verify_admin_claim(token: dict = Depends(verify_firebase_token)):
+    if token.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Insufficient administrative privileges"
+        )
+    return token
+
+async def verify_customer_claim(token: dict = Depends(verify_firebase_token)):
+    if token.get("role") != "customer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Insufficient demand-side privileges"
+        )
+    return token

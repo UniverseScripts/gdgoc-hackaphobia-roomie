@@ -6,5 +6,4 @@ class ProfileCreate(BaseModel):
     age: int
     gender: str
     university: str
-    major: str
     bio: Optional[str] = None

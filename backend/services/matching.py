@@ -1,9 +1,5 @@
 import numpy as np
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from models.user import UserVector, User
-from typing import List, Dict
-
+from typing import List, Dict, Optional
 
 def calculate_cosine_similarity(vector1: list, vector2: list) -> float:
     """Calculate cosine similarity between two vectors."""
@@ -23,25 +19,41 @@ def calculate_cosine_similarity(vector1: list, vector2: list) -> float:
     return float(np.dot(v1, v2) / (norm_v1 * norm_v2))
 
 
-async def get_user_vector(db: AsyncSession, user_id: int) -> UserVector | None:
+def get_user_vector(db, user_id: str) -> Optional[dict]:
     """Fetch a user's vector from database."""
-    result = await db.execute(
-        select(UserVector).where(UserVector.user_id == user_id)
-    )
-    return result.scalar_one_or_none()
+    doc = db.collection('user_vectors').document(user_id).get()
+    return doc.to_dict() if doc.exists else None
 
 
-async def get_candidate_vectors(db: AsyncSession, user_id: int) -> List[tuple[UserVector, User]]:
+def get_candidate_vectors(db, user_id: str) -> List[tuple[dict, dict]]:
     """Fetch all completed candidate vectors excluding the current user."""
-    result = await db.execute(
-        select(UserVector, User)
-        .join(User, UserVector.user_id == User.id)
-        .where(
-            UserVector.user_id != user_id,
-            UserVector.is_completed == True
-        )
-    )
-    return result.all()
+    vector_docs = db.collection('user_vectors').where('is_completed', '==', True).stream()
+    
+    vector_list = []
+    user_refs = []
+    
+    for doc in vector_docs:
+        if doc.id == user_id:
+             continue
+        vector_list.append(doc.to_dict())
+        user_refs.append(db.collection('users').document(doc.id))
+        
+    if not user_refs:
+        return []
+        
+    # Python Firestore SDK get_all expects either varargs or an iterable
+    # Expanding with *user_refs ensures compatibility.
+    user_snapshots = db.get_all(user_refs)
+    
+    candidates = []
+    # In Python, get_all sometimes returns a generator, so zip is perfectly fine.
+    for vec, user_snap in zip(vector_list, user_snapshots):
+        if user_snap.exists:
+            user_dict = user_snap.to_dict()
+            user_dict['id'] = user_snap.id
+            candidates.append((vec, user_dict))
+            
+    return candidates
 
 
 def calculate_match_score(similarity: float) -> int:
@@ -49,41 +61,41 @@ def calculate_match_score(similarity: float) -> int:
     return int(max(0, similarity) * 100)
 
 
-async def find_top_matches(
-    current_user_id: int,
-    db: AsyncSession,
+def find_top_matches(
+    current_user_id: str,
+    db,
     limit: int = 10
 ) -> List[Dict[str, int | str]]:
     """Find top compatible matches for a user based on vector similarity."""
     # Get current user's vector
-    user_vector = await get_user_vector(db, current_user_id)
+    user_vector = get_user_vector(db, current_user_id)
 
-    if not user_vector or not user_vector.vector_data_embeddings:
+    if not user_vector or not user_vector.get('vector_data_embeddings'):
         return []
 
     # Get all candidate vectors
-    candidates = await get_candidate_vectors(db, current_user_id)
+    candidates = get_candidate_vectors(db, current_user_id)
 
     # Calculate similarity scores
     matches = []
-    for vec_row, user_row in candidates:
-        if not vec_row.vector_data_embeddings:
+    for vec_dict, user_dict in candidates:
+        if not vec_dict.get('vector_data_embeddings'):
             continue
 
         similarity = calculate_cosine_similarity(
-            user_vector.vector_data_embeddings, vec_row.vector_data_embeddings)
+            user_vector['vector_data_embeddings'], vec_dict['vector_data_embeddings'])
             
         # SYNTHETIC MONETIZATION VECTOR (ALGORITHMIC BIAS)
         # Artificially inflate the compatibility math for "Premium" profiles
-        is_premium_profile = getattr(user_row, "is_premium", hasattr(user_row, 'id') and user_row.id % 2 == 0) # Mock condition
+        is_premium_profile = user_dict.get("is_premium", False)
         if is_premium_profile:
             similarity = min(1.0, similarity * 1.15) # 15% Artificial Boost for paying users
 
         score = calculate_match_score(similarity)
 
         matches.append({
-            "user_id": user_row.id,
-            "username": user_row.username,
+            "user_id": user_dict['id'],
+            "username": user_dict.get('username', 'Unknown'),
             "match_score": score,
             "is_promoted": is_premium_profile
         })

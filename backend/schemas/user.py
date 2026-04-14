@@ -1,22 +1,28 @@
+from enum import Enum
 from pydantic import BaseModel, EmailStr
-from typing import List, Optional
+from typing import  Optional
 
-#1. Each user has a base model which contains their name and email
+class Role(Enum):
+    CUSTOMER = "customer"
+    LANDLORD = "landlord"
+    ADMIN = "admin"
+
+
 class UserBase(BaseModel):
     username: str
+    hashed_password: str
     email: EmailStr
+    full_name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    profile_completed: bool = False
+    role: Role
 
-#2. Password is stored in the DB but not included in the response
-class UserStore(UserBase):
-    password: str
+class CustomerUserStore(UserBase):
+    university: Optional[str] = None
 
-#3. Return as part of the response to the user
+class LandlordUserStore(UserBase):
+    business_id: Optional[str] = None
+
 class UserResponse(UserBase):
-    id: int
-    
-    class Config: #Ensure Docker reads 
-        from_attributes = True
-
-#4. Vector stored for similarity algorithms for the test
-class VectorUpdate(UserBase):
-    vector_sim = List(int)
+    id: str
