@@ -1,8 +1,8 @@
-from schemas.for_rent import ListingCreate, ListingResponse
+from schemas.apartment import ApartmentCreate, ApartmentResponse
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 
-def create_listing(db, listing_data: ListingCreate, owner_id: str) -> dict:
+def create_listing(db, listing_data: ApartmentCreate, owner_id: str) -> dict:
     """
     Creates a new listing linked to the logged-in user.
     """

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from core.config import db
 from routers.auth import get_current_user
 from services.listing_matching import calculate_listing_score
-from schemas.for_rent import ListingResponse
+from schemas.apartment import ApartmentResponse
 
 router = APIRouter(prefix="/listings", tags=["Listings"])
 
@@ -47,7 +47,7 @@ async def get_listing_recommendations(current_user: dict = Depends(get_current_u
             from datetime import datetime, timezone
             raw_dict['created_at'] = datetime.now(timezone.utc)
             
-        listing_model = ListingResponse.model_validate(raw_dict)
+        listing_model = ApartmentResponse.model_validate(raw_dict)
         
         # 3. RUN ALGORITHM
         score = calculate_listing_score(user_prefs, listing_model)

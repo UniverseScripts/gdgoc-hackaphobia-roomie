@@ -1,12 +1,10 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
-class Contract(BaseModel):
+class LeaseRequest(BaseModel):
     property_id: str
     monthly_rent: float = Field(..., gt=0)
     deposit_amount: float = Field(..., ge=0)
-    available_from: str
-    terms_accepted: bool
     status: str = "pending"
 
 class AdsRequest(BaseModel):

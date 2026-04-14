@@ -1,5 +1,5 @@
 from typing import Dict
-from schemas.for_rent import ListingResponse
+from schemas.apartment import ApartmentResponse
 
 # --- 1. REUSE THE MAPS FROM VECTOR_LOGIC ---
 DISTRICT_MAP = {
@@ -28,7 +28,7 @@ def normalize_user_budget(budget_answer: str) -> float:
     return 1.0
 
 # --- 3. THE ALGORITHM ---
-def calculate_listing_score(user_prefs: Dict, listing_model: ListingResponse) -> int:
+def calculate_listing_score(user_prefs: Dict, listing_model: ApartmentResponse) -> int:
     """
     Calculates a 0-100 Match Score based purely on Location & Price.
     Expects a validated Pydantic model internally to ensure dot-notation safety.

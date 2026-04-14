@@ -46,16 +46,16 @@ def seed_firestore():
     print("🌱 Starting Seed Process for Firestore Emulator...")
     print(f"Targeting Emulator: {os.environ.get('FIRESTORE_EMULATOR_HOST')}")
     
-    properties_ref = db.collection('properties')
+    apartments_ref = db.collection('apartments')
     
     # Clear existing listings to avoid duplicates in dev
-    docs = properties_ref.limit(10).stream()
+    docs = apartments_ref.limit(10).stream()
     for doc in docs:
         doc.reference.delete()
         
     for item in LISTINGS_DATA:
         # Pushing data to Firestore
-        properties_ref.add(item)
+        apartments_ref.add(item)
         print(f"✅ Inserted property: {item['title']}")
         
     print("🎉 Mock listings seeded perfectly into Firestore Emulator!")
