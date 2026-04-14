@@ -17,15 +17,14 @@ class UserStore(UserBase):
 class UserResponse(UserBase):
     id: str
 
-class UserVectorUpdate(BaseModel):
-    # Lightweight explicit model for updating a user's vector
+class TestVectorUpdate(BaseModel):
     vector_data_embeddings: List[float]
     is_completed: bool = True
     updated_at: Optional[datetime] = None
 
-class UserVectorSchema(BaseModel):
+class TestVectorSchema(BaseModel):
     user_id: str
-    responses: Optional[Dict[str, Any]] = None
-    vector_data_embeddings: Optional[List[float]] = None
+    responses: Dict[str, Any]
+    vector_data_embeddings: list[float]
     is_completed: bool = False
     updated_at: Optional[datetime] = None
