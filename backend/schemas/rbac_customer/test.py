@@ -19,3 +19,15 @@ class TestSubmission(BaseModel):
         if v not in allowed:
             raise ValueError(f"Answer must be one of the {allowed}.")
         return v
+
+class TestVectorUpdate(BaseModel):
+    vector_data_embeddings: List[float]
+    is_completed: bool = True
+    updated_at: Optional[datetime] = None
+
+class TestVectorSchema(BaseModel):
+    user_id: str
+    responses: Dict[str, Any]
+    vector_data_embeddings: list[float]
+    is_completed: bool = False
+    updated_at: Optional[datetime] = None
