@@ -1,59 +1,75 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete
-from models.listing import Listing
-from schemas.listing import ListingCreate
+from schemas.for_rent import ListingCreate, ListingResponse
+from typing import Optional, List, Dict, Any
+from datetime import datetime, timezone
 
-
-async def create_listing(db: AsyncSession, listing_data: ListingCreate, owner_id: int) -> Listing:
+def create_listing(db, listing_data: ListingCreate, owner_id: str) -> dict:
     """
     Creates a new listing linked to the logged-in user.
     """
-    new_listing = Listing(
-        **listing_data.model_dump(),
-        owner_id=owner_id
-    )
-    db.add(new_listing)
-    await db.commit()
-    await db.refresh(new_listing)
-    return new_listing
+    doc_data = listing_data.model_dump()
+    doc_data['owner_id'] = owner_id
+    doc_data['created_at'] = datetime.now(timezone.utc)
+    
+    _time, doc_ref = db.collection('apartments').add(doc_data)
+    doc_data['id'] = doc_ref.id
+    return doc_data
 
 
-async def get_all_listings(db: AsyncSession, skip: int = 0, limit: int = 20) -> list[Listing]:
+def get_all_listings(db, cursor_id: Optional[str] = None, limit: int = 20) -> Dict[str, Any]:
     """
-    Fetches all listings with pagination.
+    Fetches all listings with optional cursor pagination.
     """
-    query = select(Listing).offset(skip).limit(
-        limit).order_by(Listing.created_at.desc())
-    result = await db.execute(query)
-    return result.scalars().all()
+    query = db.collection('apartments').order_by('created_at')
+    
+    if cursor_id:
+        cursor_doc = db.collection('apartments').document(cursor_id).get()
+        if cursor_doc.exists:
+            query = query.start_after(cursor_doc)
+            
+    query = query.limit(limit)
+    docs = query.stream()
+    
+    result = []
+    last_doc_id = None
+    for doc in docs:
+        data = doc.to_dict()
+        data['id'] = doc.id
+        result.append(data)
+        last_doc_id = doc.id
+        
+    return {
+        "data": result,
+        "next_cursor": last_doc_id
+    }
 
 
-async def get_listings_by_location(db: AsyncSession, location: str) -> list[Listing]:
+def get_listings_by_location(db, location: str) -> list:
     """
-    Example of a specific filter service (e.g. 'District 1')
+    Fetches specific listings filtered by location string (mapped to district).
     """
-    query = select(Listing).where(Listing.location == location)
-    result = await db.execute(query)
-    return result.scalars().all()
+    query = db.collection('apartments').where('district', '==', location)
+    docs = query.stream()
+    result = []
+    for doc in docs:
+        data = doc.to_dict()
+        data['id'] = doc.id
+        result.append(data)
+    return result
 
 
-async def delete_listing(db: AsyncSession, listing_id: int, owner_id: int) -> bool:
+def delete_listing(db, listing_id: str, owner_id: str) -> bool:
     """
     Deletes a listing ONLY if the owner_id matches.
     Returns True if deleted, False if not found or unauthorized.
     """
-    # 1. Check existence and ownership
-    query = select(Listing).where(
-        Listing.id == listing_id, Listing.owner_id == owner_id)
-    result = await db.execute(query)
-    listing = result.scalar_one_or_none()
+    doc_ref = db.collection('apartments').document(listing_id)
+    doc = doc_ref.get()
 
-    if not listing:
+    if not doc.exists:
+        return False
+        
+    if doc.to_dict().get('owner_id') != owner_id:
         return False
 
-    # 2. Delete
-    delete_query = delete(Listing).where(
-        Listing.id == listing_id, Listing.owner_id == owner_id)
-    await db.execute(delete_query)
-    await db.commit()
+    doc_ref.delete()
     return True
