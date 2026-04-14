@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
-class LeaseRequest(BaseModel):
+class Contract(BaseModel):
     property_id: str
     monthly_rent: float = Field(..., gt=0)
     deposit_amount: float = Field(..., ge=0)

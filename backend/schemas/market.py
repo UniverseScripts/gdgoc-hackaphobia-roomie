@@ -6,3 +6,7 @@ class MarketSearchQuery(BaseModel):
     housing_type: Optional[str] = None
     max_budget: Optional[int] = None
     semantic_query: Optional[str] = None
+
+class Ratings(BaseModel):
+    stars: int = Field(..., ge=1, le=5)
+    review: str
