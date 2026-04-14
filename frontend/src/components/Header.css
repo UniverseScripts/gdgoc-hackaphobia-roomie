@@ -21,17 +21,23 @@
   gap: 24px;
 }
 
-/* ── Logo ── */
+/* ── Brand & Logo ── */
+.header__brand {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
 .header__logo {
   flex-shrink: 0;
   line-height: 20;
 }
 
 .header__logo img {
-  height: 48px;
+  height: 100px;
   width: auto;
-  object-fit: contain;
-}
+/*   object-fit: contain;
+ */}
 
 /* ── Nav ── */
 .header__nav {
@@ -104,4 +110,55 @@
   background: #e8891a;
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(246, 157, 24, 0.38);
+}
+
+/* ── Logged In User State ── */
+.header__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header__user-greeting {
+  font-size: 14px;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.header__user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(32, 19, 77, 0.1);
+}
+
+.header__user-avatar-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--color-cta);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.btn-logout {
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  opacity: 0.6;
+}
+
+.btn-logout:hover {
+  opacity: 1;
+  color: #DC2626;
+  background: rgba(220, 38, 38, 0.1);
 }
