@@ -32,14 +32,14 @@ const VERIFIED_LISTINGS = [
     price: '3.5Tr',
     title: 'Phòng trọ full nội thất, giờ giấc tự do',
     location: 'Phường 14, Quận 10',
-    image: 'https://images.unsplash.com/photo-1555854877-bba6ecdff7be?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=400&auto=format&fit=crop',
   },
   {
     id: 2,
     price: '2.8Tr',
     title: 'KTX Cao cấp giường tầng riêng tư',
     location: 'Linh Trung, Thủ Đức',
-    image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=400&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=400&auto=format&fit=cro',
   },
   {
     id: 3,

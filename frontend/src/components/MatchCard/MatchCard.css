@@ -1,0 +1,125 @@
+.match-card {
+  background: white;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  transition: transform var(--transition), box-shadow var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+
+.match-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(252, 192, 16, 0.4); /* subtle yellow border tint */
+}
+
+.match-card__img-wrap {
+  width: 100%;
+  padding-top: 100%; /* 1:1 Aspect Ratio */
+  position: relative;
+  background: #f3f4f6;
+}
+
+.match-card__img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.match-card__score {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: white;
+  color: var(--color-cta);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(246, 157, 24, 0.35);
+  font-family: var(--font-body);
+}
+
+.match-card__content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.match-card__name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.match-card__uni {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.match-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex: 1;
+}
+
+.match-tag {
+  background: var(--color-bg);
+  color: var(--color-primary);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.match-card__actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-match {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-match--skip {
+  background: white;
+  border: 2px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.btn-match--skip:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.btn-match--connect {
+  background: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  color: white;
+}
+
+.btn-match--connect:hover {
+  background: var(--color-cta);
+  border-color: var(--color-cta);
+  box-shadow: 0 4px 14px rgba(246, 157, 24, 0.38);
+}

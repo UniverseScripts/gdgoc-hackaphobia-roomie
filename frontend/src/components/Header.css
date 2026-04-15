@@ -162,3 +162,19 @@
   color: #DC2626;
   background: rgba(220, 38, 38, 0.1);
 }
+
+.btn-chat {
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  opacity: 0.6;
+  margin-right: 4px;
+}
+
+.btn-chat:hover {
+  opacity: 1;
+  background: var(--color-bg);
+}
