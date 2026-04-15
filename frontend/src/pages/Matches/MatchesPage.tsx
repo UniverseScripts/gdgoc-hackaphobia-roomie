@@ -2,33 +2,37 @@ import Header from '../../components/Header'
 import MatchCard from '../../components/MatchCard/MatchCard'
 import './MatchesPage.css'
 
+const matchImg1 = new URL('../../assets/1.JPG', import.meta.url).href
+const matchImg2 = new URL('../../assets/2.JPG', import.meta.url).href
+const matchImg3 = new URL('../../assets/3.JPG', import.meta.url).href
+
 const MOCK_MATCHES = [
   {
     id: 'm1',
-    name: 'Minh Tuấn',
+    name: 'Quân Xi',
     age: 20,
     university: 'ĐH Bách Khoa TP.HCM',
     tags: ['Dậy sớm', 'Gọn gàng', 'Không hút thuốc', 'Hướng nội'],
     matchPercentage: 95,
-    image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=400&h=400'
+    image: matchImg1
   },
   {
     id: 'm2',
-    name: 'Thảo Vy',
+    name: 'Bảo Phạm',
     age: 19,
     university: 'ĐH Khoa học Tự nhiên',
     tags: ['Cú đêm', 'Thoải mái', 'Hòa đồng', 'Thích nấu ăn'],
     matchPercentage: 88,
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400&h=400'
+    image: matchImg2
   },
   {
     id: 'm3',
-    name: 'Hoàng Phát',
+    name: 'A Di Đà Phật',
     age: 21,
     university: 'ĐH Kinh tế TP.HCM',
     tags: ['Không hút thuốc', 'Gọn gàng', 'Hướng ngoại'],
     matchPercentage: 82,
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400&h=400'
+    image: matchImg3
   },
   {
     id: 'm4',
@@ -37,7 +41,7 @@ const MOCK_MATCHES = [
     university: 'ĐH Tôn Đức Thắng',
     tags: ['Dậy sớm', 'Không nuôi pet', 'Thích yên tĩnh'],
     matchPercentage: 75,
-    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=400&h=400'
+    image: matchImg1
   }
 ]
 
