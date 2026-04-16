@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Web của Sơn</title>
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <meta charset="UTF-8">
+    </head>
+
+    <body>
+        <header>
+            <a href="#" class="logo">Sonnguyen</a>
+            <ul>
+                <li><a href="#" class="active">Home</a></li>
+                <li><a href=https://www.youtube.com>About</a></li>
+                <li><a href="#">Help</a></li>
+                <li><a href="#">Login</a></li>
+            </ul>
+        </header>
+
+        <section>
+            <img src="asset/stars.png" id="stars">
+            <img src="asset/moon.png" id="moon">
+            <img src="asset/mountains_behind.png" id="mountains_behind">
+            <h2 id="text">HELLO</h2>
+            <a href="#readingTest" id="startButton">Scroll Down</a>
+            <img src="asset/mountains_front.png" id="mountains_front">
+        </section>
+
+        <!-- <div class="arrow" id="arrow">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div> -->
+    
+        <div class="readingTest" id="readingTest">
+            <h3>📖 Reading Passage</h3>
+            <h1>Our Vanishing Night</h1>
+            <h2>"Most city skies have become virtually empty of stars"</h2>
+            <p>
+                <br>If humans were truly at home under the light of the moon and stars, it would make no difference to us whether we were out and about at night or during the day, the midnight world as visible to us as it is to the vast number of nocturnal species on this planet. Instead, we arc diurnal creatures, meaning our eyes are adapted to living in the suns light. This is a basic evolutionary fact, even though most of us don't think of ourselves as diurnal beings any more than as primates or mammals or Earthlings. Yet it's the only way to explain what we've done to the night: we've engineered it to meet our needs by filling it with light. 
+                <br><br>
+                This kind of engineering is no different from damming a river. Its benefits come with consequences called light pollution whose effects scientists are only now beginning to study. Light pollution is largely the result of bad lighting design, which allows artificial light to shine outward and upward into the sky, where it is not wanted, instead of focusing it downward, where it is. Wherever human light spills into the natural world, some aspect of life migration, reproduction, feeding is affected. 
+                <br><br>
+                For most of human history, the phrase "light pollution" would have made no sense. Imagine walking toward London on a moonlit night around 1800, when it was one of Earth's most populous cities. Nearly a million people lived there, making do, as they always had, with candles and lanterns. There would be no gaslights in the streets or squares for another seven years
+                <br><br>
+                Now most of humanity lives under reflected, refracted light from overlit cities and suburbs, from light-flooded roads and factories. Nearly all of night-time Europe is a bright patch of light, as is most of the United States and much of Japan. In the South Atlantic the glow from a single fishing fleet squid fishermen luring their prey with metal halide lamps can be seen from space, burning brighter on occasions than Buenos Aires.
+                <br><br>
+                In most cities the sky looks as though it has been emptied of stars and taking their place is a constant orange glow. We've become so used to this that the glory of an unlit night dark enough for the planet Venus to throw shadows on Earth is wholly beyond our experience, beyond memory almost. And yet above the city's pale ceiling lies the rest of the universe, utterly undiminished by the light we waste
+                <br><br>
+                We've lit up the night as if it were an unoccupied country, when nothing could be further from the truth. Among mammals alone, the number of nocturnal species is astonishing. Light is a powerful biological force, and on many species it acts as a magnet. The effect is so powerful that scientists speak of songbirds and seabirds being 'captured' by searchlights on land or by the light from gas flares on marine oil platforms, circling and circling in the thousands until they drop. Migrating at night, birds are apt to collide with brightly lit buildings; immature birds suffer in much higher numbers than adults.
+                <br><br>
+                Insects, of course, cluster around streetlights, and feeding on those insects is a crucial means of survival for many bat species. In some Swiss valleys the European lesser horseshoe bat began to vanish after streetlights were installed, perhaps because those valleys were suddenly filled with fight-feeding pipistrelle bats. Other nocturnal mammals, like desert rodents and badgers, are more cautious about searching for food under the permanent full moon of fight pollution because they've become easier targets for the predators who are hunting them.
+                <br><br>
+                Some birds blackbirds and nightingales, among others sing at unnatural hours in the presence of artificial light. Scientists have determined that long artificial days and artificially short nights induce early breeding in a wide range of birds. And because a longer day allows for longer feeding, it can also affect migration schedules. The problem, of course, is that migration, like most other aspects of bird behavior, is a precisely timed biological behavior. Leaving prematurely may mean reaching a destination too soon for nesting conditions to be right.
+                <br><br>
+                Nesting sea turtles, which seek out dark beaches, find fewer and fewer of them to bury their eggs on. When the baby sea turtles emerge from the eggs, they gravitate toward the brighter, more reflective sea horizon but find themselves confused by artificial fighting behind the beach. In Florida alone, hatchling losses number in the hundreds of thousands every year. Frogs and toads living on the side of major highways suffer nocturnal fight levels that are as much as a million times brighter than normal, disturbing nearly every aspect of their behavior, including their night-time breedingchoruses.
+                <br><br>
+                It was once thought that light pollution only affected astronomers, who need to see the night sky in all its glorious clarity. And, in fact, some of the earliest civic efforts to control light pollution were made half a century ago to protect the view from Lowell Observatory in Flagstaff, Arizona. In 2001 Flagstaff was declared the first International Dark Sky City. By now the effort to control fight pollution has spread around the globe. More and more dues and even entire countries have committed themselves to reducing unwanted glare.
+            </p>
+        </div>
+
+        <script>
+            let stars = document.getElementById('stars');
+            let moon = document.getElementById('moon');
+            let mountains_behind = document.getElementById('mountains_behind');
+            let text = document.getElementById('text');
+            let startButton = document.getElementById('startButton');
+            let mountains_front = document.getElementById('mountains_front');
+            let arrow = document.getElementById('arrow');
+            let header = document.querySelector('header');
+
+            window.addEventListener('scroll', () => {
+                header.classList.toggle('shadow', window.scrollY>900)
+            });
+
+            window.addEventListener('scroll', function() {
+                let value = window.scrollY;
+                stars.style.left = value * 0.5 + 'px';
+                moon.style.top = value * 1.05 + 'px';
+                mountains_behind.style.top = value * 0.5 + 'px';
+                text.style.marginRight = value * 4 + 'px';
+                text.style.marginTop = value * 1.5 + 'px';
+                startButton.style.marginTop = value * 1.5 + 'px';
+                arrow.style.marginTop = value * 1.05 + 'px';
+                /* header.style.marginTop = value * 0.5 + 'px'; */
+                /* header.classList.toggle('shadow', window.scrollY>0) */
+            });
+        </script>
+    </body>
+</html>
+
+
+
+

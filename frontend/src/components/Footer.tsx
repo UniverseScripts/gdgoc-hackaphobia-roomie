@@ -7,7 +7,7 @@ const Footer = () => {
       <div className="footer__body">
         <div className="footer__brand">
           <div className="footer__logo-wrap">
-            <img src="/Logo.png" alt="RooMie" />
+            <img src="/Logo_Dark.png" alt="RooMie" />
           </div>
           <p className="footer__tagline">
             Nền tảng tìm kiếm phòng trọ và ghép đôi roommate an toàn, đáng tin cậy dành cho sinh viên.

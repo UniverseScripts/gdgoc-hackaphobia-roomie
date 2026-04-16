@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900&display=swap');
+
+* {
+    margin: 0; padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif; 
+    scroll-behavior: smooth;  /* <- click vào button nó trượt xuống mượn hơn */
+}
+
+body {
+    min-height: 100vh;
+    overflow-x: hidden;
+    background: linear-gradient(#2b1055,#7597de);
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 30px 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10000;
+    transition: 0.25s;
+}
+
+header.shadow {
+    background: #2b1055;
+}
+
+header .logo {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 2em;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+header ul {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+header ul li {
+    list-style: none;
+    margin-left: 20px;
+}
+
+header ul li a {
+    text-decoration: none;
+    padding: 6px 15px;
+    color: #fff;
+    border-radius: 20px;
+}
+
+header ul li a:hover , 
+header ul li a.active {
+    background: #fff;
+    color: #2b1055;
+}
+
+section {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    padding: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+section::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 100px;
+    background: linear-gradient(to top, #1c0522, transparent);
+    z-index: 1000;
+}
+
+section img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+section img#moon {
+    mix-blend-mode: screen;
+}
+
+section img#mountains_front {
+    z-index: 10;
+
+}
+
+#text {
+    position: absolute;
+    right: -350px;
+    color: #fff;
+    white-space: nowrap;
+    font-size: 7.5vw;
+    z-index: 9;
+}
+
+#startButton {
+    text-decoration: none;
+    display: inline-block;
+    padding: 8px 30px;
+    border-radius: 40px;
+    background: #fff;
+    color: #2b1055;
+    font-size: 1.5em;
+    transform: translateY(100px);
+    z-index: 9;
+}
+
+#startButton:hover {
+    letter-spacing: 0.2em;
+    transition: 0.5s;
+}
+
+body {
+    background-color: #322B2B;
+}
+
+/* .arrow {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: rotate(360deg);
+    cursor: pointer;
+}
+
+.arrow span {
+    display: block;
+    width: 1vw;
+    height: 1vw;
+    border-bottom: 5px solid white;
+    border-right: 5px solid white;
+    transform: rotate(45deg);
+    margin: -10px;
+    animation: animate 2s infinite;
+}
+
+.arrow span:nth-child(2) {
+    animation-delay: -0.2s;
+}
+
+.arrow span:nth-child(3) {
+    animation-delay: -0.4s;
+}
+
+@keyframes animate {
+    0% {
+        opacity: 0;
+        transform: rotate(45deg) translate(-20px, -20px);
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: rotate(45deg) translate(20px, 20px);
+    }
+} */
+
+.readingTest {
+    position: relative;
+    padding :100px;
+    background: #1c0522;
+    color: #fff;
+}
+
+.readingTest h3 {
+    font-size: 1.65em;
+    margin-left: 10%;
+    color: #fff;
+}
+
+.readingTest h1 {
+    font-size: 3.5em;
+    text-align: center;
+    color: #fff;
+}
+
+.readingTest h2 {
+    text-align: center;
+    color: #fff;
+}
+
+.readingTest p {
+    font-size: 1.3em;
+    margin-left: 15%;
+    margin-right: 15%;
+    text-align: justify;
+    color: #fff;
+}
+
