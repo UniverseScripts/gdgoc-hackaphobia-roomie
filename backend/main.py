@@ -3,11 +3,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # OpenTelemetry imports
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
+try:
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
+    OTEL_AVAILABLE = True
+except ImportError:
+    OTEL_AVAILABLE = False
 
 # Routers (importing what we have, e.g., auth, matches - ignoring db missing for now, keep it simple)
 # We will just setup the FastAPI struct as demanded.
@@ -37,8 +41,8 @@ try:
 except Exception as e:
     print(f"OTEL initialization skipped or failed: {e}")
 
-# Call FastAPI instrumentor
-FastAPIInstrumentor.instrument_app(app)
+if OTEL_AVAILABLE:
+    FastAPIInstrumentor.instrument_app(app)
 
 # 3. Include Routers
 app.include_router(matches.router, prefix="/api/matches", tags=["Matches"])

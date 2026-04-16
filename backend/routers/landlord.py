@@ -4,7 +4,7 @@ from typing import Dict, Any
 
 from core.config import db
 from services.auth import verify_landlord_claim
-from schemas.landlord import LeaseRequest, AdsRequest
+from schemas.landlord import LeaseRequest, AdsRequest, PendingApartmentCreate, PendingApartmentResponse
 
 router = APIRouter(prefix="/landlord", tags=["Landlord"])
 
@@ -52,3 +52,22 @@ async def get_ad_analytics(id: str):
     }
     
     return {"id": id, "analytics": analytics}
+
+@router.post("/properties/stage", response_model=PendingApartmentResponse, status_code=status.HTTP_201_CREATED)
+def stage_property(payload: PendingApartmentCreate, current_landlord: dict = Depends(verify_landlord_claim)):
+    """
+    Secure staging endpoint for landlord property submissions.
+    """
+    document_data = payload.model_dump()
+    
+    # State Injection: Forcibly append cryptographic and application state
+    document_data["owner_id"] = current_landlord.get("uid")
+    document_data["status"] = "pending_review"
+    
+    # Target isolation collection, prevent direct write to main inventory
+    doc_ref = db.collection("pending_apartments").document()
+    document_data["id"] = doc_ref.id
+    
+    doc_ref.set(document_data)
+    
+    return document_data
