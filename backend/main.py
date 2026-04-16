@@ -15,7 +15,7 @@ except ImportError:
 
 # Routers (importing what we have, e.g., auth, matches - ignoring db missing for now, keep it simple)
 # We will just setup the FastAPI struct as demanded.
-from routers import matches, landlord, market, sponsor
+from routers import matches, landlord, market, sponsor, admin
 
 # 1. Initialize FastAPI Application
 app = FastAPI(title="Roomie Backend API")
@@ -49,6 +49,7 @@ app.include_router(matches.router, prefix="/api/matches", tags=["Matches"])
 app.include_router(landlord.router, prefix="/api/landlord", tags=["Landlord"])
 app.include_router(market.router, prefix="/api/market", tags=["Market"])
 app.include_router(sponsor.router, prefix="/api/sponsor", tags=["Sponsor"])
+app.include_router(admin.router, prefix="/api")
 
 @app.get("/api/health")
 def health_check():
