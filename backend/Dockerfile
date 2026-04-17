@@ -1,22 +1,25 @@
-# 1. Use an official Python runtime as a parent image
-FROM python:3.10-slim
+# Use a slim Python base image
+FROM python:3.11-slim
 
-# 2. Set the working directory in the container
+# Prevent Python from writing pyc files and buffering stdout
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
-# 3. Install system dependencies
-RUN apt-get update && apt-get install -y libpq-dev gcc
-
-# 4. Copy requirements file and install dependencies
+# Install pure Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Copy the rest of the backend code
+# Copy the application matrix
 COPY . .
 
-# 6. Expose the port the app runs on (Cloud Run provides PORT env var, typically 8080)
-ENV PORT=8080
-EXPOSE $PORT
+# ENFORCE ZERO-TRUST: Create and switch to a non-root user
+RUN useradd -m appuser && chown -R appuser /app
+USER appuser
 
-# 7. Command to run the app on Cloud Run dynamically via $PORT
-CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}
+# Expose the internal port expected by Cloud Run
+EXPOSE 8080
+
+# STRICT EXEC ARRAY: Required for SIGTERM propagation
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
