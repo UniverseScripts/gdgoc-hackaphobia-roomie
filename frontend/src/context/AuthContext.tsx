@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import { onAuthStateChanged, fetchSignInMethodsForEmail, linkWithPopup } from "firebase/auth";
-import { auth, googleProvider, facebookProvider, signInWithPopup, signOut } from "../lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, googleProvider, facebookProvider, signInWithPopup, signOut, db } from "../lib/firebase";
+import type { UserProfile } from "../types";
 
 interface AuthContextType {
   user: User | null;
+  userProfile: UserProfile | null;
   loading: boolean;
   loginWithGoogle: () => Promise<void>;
   loginWithFacebook: () => Promise<void>;
@@ -13,6 +16,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  userProfile: null,
   loading: true,
   loginWithGoogle: async () => {},
   loginWithFacebook: async () => {},
@@ -23,11 +27,38 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        try {
+          const docRef = doc(db, 'users', currentUser.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setUserProfile({
+              ...data,
+              role: data.role || 'customer', // Defensive fallback
+              id: currentUser.uid
+            } as UserProfile);
+          } else {
+            setUserProfile({
+              id: currentUser.uid,
+              role: 'customer',
+              username: currentUser.displayName || 'User',
+              email: currentUser.email || '',
+              profile_completed: false
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch user profile", error);
+        }
+      } else {
+        setUserProfile(null);
+      }
       setLoading(false);
     });
 
@@ -75,7 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginWithGoogle, loginWithFacebook, logout }}>
+    <AuthContext.Provider value={{ user, userProfile, loading, loginWithGoogle, loginWithFacebook, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );
