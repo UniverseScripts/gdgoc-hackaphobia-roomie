@@ -3,7 +3,7 @@ import functools
 from vertexai.language_models import TextEmbeddingModel
 
 # Initialize the embedding model
-embedding_model = TextEmbeddingModel.from_pretrained("textembedding-gecko@003")
+embedding_model = TextEmbeddingModel.from_pretrained("text-embedding-004")
 
 @functools.lru_cache(maxsize=128)
 def generate_semantic_vector(text: str) -> List[float]:

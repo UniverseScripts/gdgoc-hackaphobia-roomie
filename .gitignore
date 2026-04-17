@@ -2,3 +2,9 @@
 instructions.md
 guidelines.md
 node_modules/
+__pycache__/
+*.pyc
+.venv/
+.env.example  
+hackaphobia-roomie-7288262340d8.json
+scripts/
