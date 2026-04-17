@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from typing import Annotated
-from pydantic import Ann
+
 from starlette import status
 from firebase_admin import auth
 from core.config import settings

@@ -4,7 +4,7 @@ from firebase_admin import initialize_app, firestore
 
 class Settings(BaseSettings):
     # These will now be read from .env (locally) or docker-compose (production)
-    FIREBASE_CONFIG: list
+    FIREBASE_CONFIG: dict
     SECRET_KEY: str = "your-secret-key-here"
     ALGORITHM: str = "HS256"
 
