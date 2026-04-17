@@ -7,9 +7,11 @@ const LoginPage = () => {
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
+  const [isSignup, setIsSignup] = useState(false) // Toggle between Login/Signup
+  const [error, setError] = useState<string | null>(null)
 
   const navigate = useNavigate()
-  const { loginWithGoogle, loginWithFacebook } = useAuth()
+  const { loginWithGoogle, loginWithFacebook, loginWithEmail, signupWithEmail } = useAuth()
 
   const handleGoogleLogin = async () => {
     try {
@@ -29,10 +31,21 @@ const LoginPage = () => {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: connect to backend /auth/token
-    console.log('Login:', { email, password })
+    setError(null)
+    
+    try {
+      if (isSignup) {
+        await signupWithEmail(email, password)
+      } else {
+        await loginWithEmail(email, password)
+      }
+      // Firebase Identity established. Route to Profile Matrix.
+      navigate('/onboarding')
+    } catch (err: any) {
+      setError(err.message || "Authentication failed.")
+    }
   }
 
   return (
@@ -58,8 +71,10 @@ const LoginPage = () => {
             <img src="/Logo.png" alt="RooMie Logo" />
           </div>
 
-          <h1 className="login-title">Chào mừng trở lại RooMie!</h1>
-          <p className="login-subtitle">Vui lòng đăng nhập để tiếp tục tìm kiếm</p>
+          <h1 className="login-title">{isSignup ? 'Tạo tài khoản RooMie' : 'Chào mừng trở lại RooMie!'}</h1>
+          <p className="login-subtitle">{isSignup ? 'Đăng ký để tiếp tục' : 'Vui lòng đăng nhập để tiếp tục tìm kiếm'}</p>
+
+          {error && <div className="login-error-message" style={{ color: '#d32f2f', background: '#ffebee', padding: '10px', borderRadius: '4px', marginBottom: '1rem', fontSize: '0.9rem' }}>{error}</div>}
 
           <form className="login-form" onSubmit={handleSubmit} noValidate>
             {/* Email */}
@@ -124,13 +139,13 @@ const LoginPage = () => {
             </div>
 
             <button type="submit" id="login-submit-btn" className="btn-login">
-              Đăng nhập
+              {isSignup ? 'Đăng ký' : 'Đăng nhập'}
             </button>
           </form>
 
           {/* Divider */}
           <div className="login-divider" aria-label="or">
-            <span>Hoặc đăng nhập với</span>
+            <span>Hoặc {isSignup ? 'đăng ký' : 'đăng nhập'} với</span>
           </div>
 
           {/* Social Buttons */}
@@ -153,10 +168,16 @@ const LoginPage = () => {
           </div>
 
           <p className="login-register-cta">
-            Chưa có tài khoản?{' '}
-            <Link to="/signup" className="login-register-link" id="signup-link">
-              Đăng ký ngay
-            </Link>
+            {isSignup ? 'Đã có tài khoản? ' : 'Chưa có tài khoản? '}
+            <button 
+              type="button" 
+              onClick={() => { setIsSignup(!isSignup); setError(null); }} 
+              className="login-register-link" 
+              style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer', textDecoration: 'underline' }} 
+              id="signup-link"
+            >
+              {isSignup ? 'Đăng nhập ngay' : 'Đăng ký ngay'}
+            </button>
           </p>
         </div>
       </main>

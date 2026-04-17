@@ -22,7 +22,9 @@ export default function ChatPage() {
     if (!user) return;
     const fetchInbox = async () => {
       try {
-        const res = await authenticatedFetch('/api/chat/inbox');
+        const res = await authenticatedFetch('/api/chat/conversations');
+        const data = await res.json();
+        setInbox(data || []);
       } catch (err: any) {
         setError(err.message);
       }
@@ -34,17 +36,25 @@ export default function ChatPage() {
     if (!user || !activeChat) return;
     const loadHistoryAndConnect = async () => {
       try {
-        const res = await authenticatedFetch(`/api/chat/history/${activeChat.id}?limit=50`);
-        setMessages(res.messages || []);
+        const historyRes = await authenticatedFetch(`/api/chat/history/${activeChat.id}?limit=50`);
+        const messagesData = await historyRes.json();
+        setMessages(messagesData || []);
 
-        const thread_id = getThreadId(user.uid, activeChat.id);
+        const token = await user.getIdToken();
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        ws.current = new WebSocket(`${protocol}//${window.location.host}/api/chat/ws/${user.uid}?token=${res.token}`);
+        ws.current = new WebSocket(`${protocol}//${window.location.host}/api/chat/ws/${user.uid}/${token}`);
         
         ws.current.onmessage = (event) => {
           const incoming = JSON.parse(event.data);
-          if (incoming.thread_id === thread_id) {
-            setMessages(prev => [...prev, incoming]);
+          // incoming format: {"sender": user_id, "msg": content}
+          if (incoming.sender === activeChat.id || incoming.sender === user.uid) {
+            setMessages(prev => [...prev, {
+              id: Date.now().toString(),
+              sender_id: incoming.sender,
+              receiver_id: incoming.sender === user.uid ? activeChat.id : user.uid,
+              content: incoming.msg,
+              timestamp: new Date().toISOString()
+            } as any]);
           }
         };
       } catch (err: any) {
@@ -58,8 +68,8 @@ export default function ChatPage() {
   const handleSend = () => {
     if (!message.trim() || !user || !activeChat || !ws.current) return;
     ws.current.send(JSON.stringify({
-      thread_id: getThreadId(user.uid, activeChat.id),
-      content: message
+      to: activeChat.id,
+      msg: message
     }));
     setMessage('');
   };

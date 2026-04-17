@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
-import { onAuthStateChanged, fetchSignInMethodsForEmail, linkWithPopup } from "firebase/auth";
+import { onAuthStateChanged, fetchSignInMethodsForEmail, linkWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, googleProvider, facebookProvider, signInWithPopup, signOut, db } from "../lib/firebase";
 import type { UserProfile } from "../types";
@@ -11,6 +11,8 @@ interface AuthContextType {
   loading: boolean;
   loginWithGoogle: () => Promise<void>;
   loginWithFacebook: () => Promise<void>;
+  loginWithEmail: (email: string, pass: string) => Promise<void>;
+  signupWithEmail: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -20,6 +22,8 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   loginWithGoogle: async () => {},
   loginWithFacebook: async () => {},
+  loginWithEmail: async () => {},
+  signupWithEmail: async () => {},
   logout: async () => {},
 });
 
@@ -105,8 +109,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signupWithEmail = async (email: string, pass: string) => {
+    await createUserWithEmailAndPassword(auth, email, pass);
+  };
+
+  const loginWithEmail = async (email: string, pass: string) => {
+    await signInWithEmailAndPassword(auth, email, pass);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, userProfile, loading, loginWithGoogle, loginWithFacebook, logout }}>
+    <AuthContext.Provider value={{ user, userProfile, loading, loginWithGoogle, loginWithFacebook, loginWithEmail, signupWithEmail, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );

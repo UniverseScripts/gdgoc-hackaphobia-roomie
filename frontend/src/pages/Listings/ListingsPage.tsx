@@ -1,6 +1,7 @@
 import Header from '../../components/Header'
 import './ListingsPage.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import L from 'leaflet'
 import { authenticatedFetch } from '../../lib/api'
 import 'leaflet/dist/leaflet.css'
@@ -22,10 +23,9 @@ function PropertyDetailPanel({ listing, onClose }: { listing: Apartment; onClose
   const prevSlide = () => setSlideIdx(i => (i - 1 + listing.images.length) % listing.images.length)
   const nextSlide = () => setSlideIdx(i => (i + 1) % listing.images.length)
 
-  // Note: Lat Lng needs to be part of the Apartment schema or dynamically geocoded
-  // Assuming the DB schema gets updated to include them, we mock fallback for compilation.
-  const lat = (listing as any).lat || 10.772;
-  const lng = (listing as any).lng || 106.664;
+  // Mapping vector coordinates array to static map endpoints
+  const lat = listing.coordinates?.[0] || 10.772;
+  const lng = listing.coordinates?.[1] || 106.664;
   const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
 
   return (
@@ -165,19 +165,29 @@ export default function ListingsPage() {
   const [selectedListing, setSelectedListing] = useState<Apartment | null>(null)
   const [listings, setListings] = useState<Apartment[]>([])
   const [error, setError] = useState<string | null>(null)
-  
+  const location = useLocation()
+  const baseQuery = location.state?.query || {}
+
   useEffect(() => {
-    const fetchMarket = async () => {
+    const executeSearch = async () => {
       try {
-        const res = await authenticatedFetch('/api/market')
+        const payload = {
+          ...baseQuery,
+          semantic_query: null // Inheriting default UI null assignment until mapped
+        }
+
+        const res = await authenticatedFetch('/api/market/search', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        })
         if (!res.ok) throw new Error('Infrastructure Failure: Market API execution dropped. The NoSQL request failed.')
         const data = await res.json()
-        setListings(data.apartments || [])
+        setListings(data.data || [])
       } catch (err: any) {
         setError(err.message)
       }
     }
-    fetchMarket()
+    executeSearch()
   }, [])
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<L.Map | null>(null)
@@ -236,8 +246,8 @@ export default function ListingsPage() {
         popupAnchor: [-8, -40]
       })
 
-      const lat = (item as any).lat || 10.772;
-      const lng = (item as any).lng || 106.664;
+      const lat = item.coordinates?.[0] || 10.772;
+      const lng = item.coordinates?.[1] || 106.664;
       const marker = L.marker([lat, lng], { icon: priceMarkerIcon })
         .bindPopup(
           `<div class="listing-popup">
@@ -289,8 +299,8 @@ export default function ListingsPage() {
   const handleCardClick = (item: Apartment) => {
     setSelectedListing(prev => prev?.id === item.id ? null : item)
     // Pan map to selected listing
-    const lat = (item as any).lat || 10.772;
-    const lng = (item as any).lng || 106.664;
+    const lat = item.coordinates?.[0] || 10.772;
+    const lng = item.coordinates?.[1] || 106.664;
     if (mapRef.current) {
       mapRef.current.flyTo([lat, lng], 15, { duration: 0.8 })
     }

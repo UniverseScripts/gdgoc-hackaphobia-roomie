@@ -5,33 +5,41 @@ import './OnboardingPage.css' // Retaining original CSS mapping
 
 /* ── Static Data Matrices ── */
 const SLEEP_OPTIONS = [
-  { value: 'early', label: 'Ngủ sớm (Trước 11h)' },
-  { value: 'late',  label: 'Cú đêm (Sau 12h)' },
+  { value: 'sleep_very_early', label: 'Rất sớm (Trước 10h)' },
+  { value: 'sleep_early', label: 'Sớm (10h-11h)' },
+  { value: 'sleep_normal', label: 'Bình thường (11h-12h)' },
+  { value: 'sleep_late', label: 'Trễ (12h-1h)' },
+  { value: 'sleep_very_late', label: 'Rất trễ (Sau 1h)' }
 ]
 
 const CLEANLINESS_OPTIONS = [
-  { value: 'very_clean', label: 'Rất gọn gàng' },
-  { value: 'normal',     label: 'Bình thường' },
-  { value: 'relaxed',    label: 'Thoải mái' },
+  { value: 'clean_messy', label: 'Rất bừa bộn' },
+  { value: 'clean_somewhat_messy', label: 'Hơi bừa bộn' },
+  { value: 'clean_normal', label: 'Bình thường' },
+  { value: 'clean_somewhat_clean', label: 'Khá sạch sẽ' },
+  { value: 'clean_very_clean', label: 'Rất sạch sẽ' }
 ]
 
 const NOISE_TOLERANCE_OPTIONS = [
-  { value: 'low',    label: 'Tuyệt đối yên tĩnh' },
-  { value: 'medium', label: 'Bình thường' },
-  { value: 'high',   label: 'Không quan tâm' },
+  { value: 'noise_silent', label: 'Hoàn toàn yên tĩnh' },
+  { value: 'noise_moderate', label: 'Sẵn sàng giảm âm lượng' },
+  { value: 'noise_high', label: 'Khó thích nghi' },
+  { value: 'noise_any', label: 'Không quan tâm tiếng ồn' }
 ]
 
 const GUEST_FREQUENCY_OPTIONS = [
-  { value: 'never',     label: 'Không bao giờ' },
-  { value: 'sometimes', label: 'Thỉnh thoảng' },
-  { value: 'often',     label: 'Thường xuyên' },
+  { value: 'guest_hate', label: 'Không bao giờ' },
+  { value: 'guest_hardly', label: 'Hiếm khi' },
+  { value: 'guest_notify', label: 'Chỉ khi báo trước' },
+  { value: 'guest_open', label: 'Thoải mái' }
 ]
 
 const PRIORITY_OPTIONS = [
-  { value: 'price',    label: 'Giá cả' },
-  { value: 'location', label: 'Vị trí' },
-  { value: 'roommate', label: 'Tính cách bạn cùng phòng' },
-  { value: 'amenity',  label: 'Tiện ích chung' },
+  { value: 'priority_cheap', label: 'Giá rẻ' },
+  { value: 'priority_location', label: 'Gần trường/chỗ làm' },
+  { value: 'priority_convenience', label: 'Tiện lợi' },
+  { value: 'priority_security', label: 'An ninh' },
+  { value: 'priority_peaceful', label: 'Yên tĩnh' }
 ]
 
 const DISTRICT_OPTIONS = [

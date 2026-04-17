@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { authenticatedFetch } from '../../lib/api'
 import Header from '../../components/Header'
 import Footer from '../../components/Footer'
 import './LandingPage.css'
@@ -63,6 +64,32 @@ const LandingPage = () => {
   const [searchMode, setSearchMode] = useState<SearchMode>('room')
   const [location, setLocation] = useState('')
   const [budget, setBudget] = useState('')
+  const [verifiedListings, setVerifiedListings] = useState<any[]>([])
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const fetchMarket = async () => {
+      try {
+        const res = await authenticatedFetch('/api/market')
+        if (res.ok) {
+          const data = await res.json()
+          // Only slice first 4 for the landing section
+          setVerifiedListings((data.data || []).slice(0, 4))
+        }
+      } catch (err) {
+        console.error("Failed to fetch genesis market data:", err)
+      }
+    }
+    fetchMarket()
+  }, [])
+
+  const handleSearch = () => {
+    const searchPayload = {
+      location_adm2: location || undefined,
+      max_budget: budget ? parseFloat(budget.replace(/\D/g, '')) : undefined
+    }
+    navigate('/listings', { state: { query: searchPayload } })
+  }
 
   return (
     <div className="landing">
@@ -140,7 +167,7 @@ const LandingPage = () => {
                 </div>
               </div>
 
-              <button id="search-btn" className="search-widget__btn">
+              <button id="search-btn" className="search-widget__btn" onClick={handleSearch}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 Tìm Kiếm
               </button>
@@ -188,11 +215,11 @@ const LandingPage = () => {
             </div>
 
             <div className="listing-grid">
-              {VERIFIED_LISTINGS.map((item) => (
+              {verifiedListings.map((item) => (
                 <article key={item.id} className="listing-card">
                   <div className="listing-card__img-wrap">
                     <img
-                      src={item.image}
+                      src={item.images?.[0] || 'https://via.placeholder.com/400x300'}
                       alt={item.title}
                       className="listing-card__img"
                       loading="lazy"
@@ -204,12 +231,12 @@ const LandingPage = () => {
                   </div>
                   <div className="listing-card__body">
                     <p className="listing-card__price">
-                      {item.price}<span>/tháng</span>
+                      {new Intl.NumberFormat('vi-VN').format(item.price)} đ<span>/tháng</span>
                     </p>
                     <p className="listing-card__title">{item.title}</p>
                     <p className="listing-card__location">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                      {item.location}
+                      {item.district}
                     </p>
                   </div>
                 </article>
