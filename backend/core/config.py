@@ -1,5 +1,10 @@
 from pydantic_settings import BaseSettings
 from firebase_admin import initialize_app, firestore
+from dotenv import load_dotenv
+import os
+
+# Explicitly hydrate os.environ so google-auth detects the path.
+load_dotenv(".env")
 
 
 class Settings(BaseSettings):
@@ -12,6 +17,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
 settings = Settings()

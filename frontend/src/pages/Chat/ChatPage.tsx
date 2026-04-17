@@ -3,10 +3,7 @@ import './ChatPage.css'
 import { useEffect, useState, useRef } from 'react'
 import type { ChatMessage } from '../../types'
 import { useAuth } from '../../context/AuthContext'
-
-const getThreadId = (uid1: string, uid2: string): string => {
-  return [uid1, uid2].sort().join('_');
-};
+import { authenticatedFetch } from '../../lib/api'
 
 export default function ChatPage() {
   const { user } = useAuth();
@@ -21,11 +18,9 @@ export default function ChatPage() {
     if (!user) return;
     const fetchInbox = async () => {
       try {
-        const res = await fetch('/api/chat/inbox', {
-          headers: { Authorization: `Bearer ${await user.getIdToken()}` }
-        });
-        if (!res.ok) throw new Error('Infrastructure Failure: Inbox resolution failed');
-        setInbox(await res.json());
+        const res = await authenticatedFetch('/chat/conversations');
+        const data = await res.json();
+        setInbox(data || []);
       } catch (err: any) {
         setError(err.message);
       }
@@ -37,22 +32,25 @@ export default function ChatPage() {
     if (!user || !activeChat) return;
     const loadHistoryAndConnect = async () => {
       try {
-        const token = await user.getIdToken();
-        const res = await fetch(`/api/chat/history/${activeChat.id}?limit=50`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Infrastructure Failure: History resolution failed');
-        const data = await res.json();
-        setMessages(data.messages || []);
+        const historyRes = await authenticatedFetch(`/chat/history/${activeChat.id}?limit=50`);
+        const messagesData = await historyRes.json();
+        setMessages(messagesData || []);
 
-        const thread_id = getThreadId(user.uid, activeChat.id);
+        const token = await user.getIdToken();
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        ws.current = new WebSocket(`${protocol}//${window.location.host}/api/chat/ws/${user.uid}?token=${token}`);
+        ws.current = new WebSocket(`${protocol}//${window.location.host}/api/chat/ws/${user.uid}/${token}`);
         
         ws.current.onmessage = (event) => {
           const incoming = JSON.parse(event.data);
-          if (incoming.thread_id === thread_id) {
-            setMessages(prev => [...prev, incoming]);
+          // incoming format: {"sender": user_id, "msg": content}
+          if (incoming.sender === activeChat.id || incoming.sender === user.uid) {
+            setMessages(prev => [...prev, {
+              id: Date.now().toString(),
+              sender_id: incoming.sender,
+              receiver_id: incoming.sender === user.uid ? activeChat.id : user.uid,
+              content: incoming.msg,
+              timestamp: new Date().toISOString()
+            } as any]);
           }
         };
       } catch (err: any) {
@@ -66,8 +64,8 @@ export default function ChatPage() {
   const handleSend = () => {
     if (!message.trim() || !user || !activeChat || !ws.current) return;
     ws.current.send(JSON.stringify({
-      thread_id: getThreadId(user.uid, activeChat.id),
-      content: message
+      to: activeChat.id,
+      msg: message
     }));
     setMessage('');
   };

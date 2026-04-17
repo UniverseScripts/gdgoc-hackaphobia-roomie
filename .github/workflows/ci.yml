@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy-frontend:
     runs-on: ubuntu-latest
     
     steps:
@@ -33,7 +33,6 @@ jobs:
       - name: Build Vite SPA Sandbox
         working-directory: ./frontend
         env:
-          VITE_GOOGLE_MAPS_VECTOR_ID: ${{ secrets.VITE_GOOGLE_MAPS_VECTOR_ID }}
           VITE_API_GATEWAY_URL: ${{ secrets.VITE_API_GATEWAY_URL }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: npm run build
@@ -45,3 +44,35 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: ${{ secrets.GCP_PROJECT_ID }}
           channelId: live
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        # Ensure your target region supports global scalability. 
+        # Since you prioritize global potentials, multi-region routing is optimal.
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t us-central1-docker.pkg.dev/hackaphobia-roomie/roomie-repo/roomie-backend:${{ github.sha }} ./backend
+          docker push us-central1-docker.pkg.dev/hackaphobia-roomie/roomie-repo/roomie-backend:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: roomie-backend
+          region: us-central1
+          image: us-central1-docker.pkg.dev/hackaphobia-roomie/roomie-repo/roomie-backend:${{ github.sha }}
+          flags: '--allow-unauthenticated'

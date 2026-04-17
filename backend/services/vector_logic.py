@@ -15,54 +15,63 @@ def generate_semantic_vector(text: str) -> List[float]:
     return embeddings[0].values
 
 # --- 1. SLEEP SCHEDULE ---
-SLEEP_MAP = {
-    "Very early (before 10h)": 0.0,
-    "Some-what early (10–11h)": 0.25,
-    "Average (11–12h)": 0.5,
-    "Midnight (12–1am)": 0.75,
-    "Very late (Sleep after 1am)": 1.0
+SLEEP_TENSOR_MAP = {
+    "sleep_very_early": 0.0,
+    "sleep_early": 0.25,
+    "sleep_normal": 0.5,
+    "sleep_late": 0.75,
+    "sleep_very_late": 1.0
 }
 
 # --- 2. CLEANLINESS ---
-CLEANLINESS_MAP = {
-    "Very messy as long as there’s a place to rest": 0.0,
-    "A bit messy": 0.25,
-    "Normal": 0.5,
-    "Somewhat clean": 0.75,
-    "I stay very clean and hygienic. Cannot stand dirtiness": 1.0
+CLEANLINESS_TENSOR_MAP = {
+    "clean_messy": 0.0,
+    "clean_somewhat_messy": 0.25,
+    "clean_normal": 0.5,
+    "clean_somewhat_clean": 0.75,
+    "clean_very_clean": 1.0
 }
 
 # --- 3. NOISE TOLERANCE ---
-NOISE_MAP = {
-    "Immediately stay silent": 0.0,
-    "Willing to lower your volume if pointed out": 0.33,
-    "Hard to adapt": 0.66,
-    "Genuinely do not give a damn": 1.0
+NOISE_TENSOR_MAP = {
+    "noise_silent": 0.0,
+    "noise_moderate": 0.33,
+    "noise_high": 0.66,
+    "noise_any": 1.0
 }
 
 # --- 4. GUEST FREQUENCY ---
-GUEST_MAP = {
-    "Hate it": 0.0,
-    "Hardly": 0.33,
-    "Only when notified in advance": 0.66,
-    "Open-minded": 1.0
+GUEST_TENSOR_MAP = {
+    "guest_hate": 0.0,
+    "guest_hardly": 0.33,
+    "guest_notify": 0.66,
+    "guest_open": 1.0
 }
 
-# --- 5. BUDGET ---
-BUDGET_MAP = {
-    "Under 1.5mil VND": 0.0,
-    "1.5-2mil VND": 0.33,
-    "2-3mil VND": 0.66,
-    "Over 3mil VND": 1.0
-}
+# --- 5. BUDGET NORMALIZATION ---
+def normalize_budget(budget_str: str) -> float:
+    try:
+        # Expected format: "1500000-4000000"
+        bounds = budget_str.split("-")
+        b_min = float(bounds[0])
+        b_max = float(bounds[1])
+        
+        mean_budget = (b_min + b_max) / 2.0
+        
+        # Absolute bounds: 0 to 10,000,000 VND
+        normalized = mean_budget / 10000000.0
+        return max(0.0, min(1.0, normalized))
+    except (ValueError, IndexError):
+        # Fallback to absolute median on pipeline failure
+        return 0.5 
 
 # --- 6. PRIORITY ---
-PRIORITY_MAP = {
-    "Cheap": 0.0,
-    "Near school/workplace": 0.25,
-    "Convenience": 0.5,
-    "Security": 0.75,
-    "Peaceful": 1.0
+PRIORITY_TENSOR_MAP = {
+    "priority_cheap": 0.0,
+    "priority_location": 0.25,
+    "priority_convenience": 0.5,
+    "priority_security": 0.75,
+    "priority_peaceful": 1.0
 }
 
 # --- 7. DISTRICT ---
@@ -80,12 +89,12 @@ def processing_submissions(data: Dict) -> List[float]:
     vector = []
     
     # Safely get values with defaults in case of missing data
-    vector.append(SLEEP_MAP.get(data.get("sleep_schedule", ""), 0.5))
-    vector.append(CLEANLINESS_MAP.get(data.get("cleanliness", ""), 0.5))
-    vector.append(NOISE_MAP.get(data.get("noise_tolerance", ""), 0.5))
-    vector.append(GUEST_MAP.get(data.get("guest_frequency",""), 0.5))
-    vector.append(BUDGET_MAP.get(data.get("budget", ""), 0.5))
-    vector.append(PRIORITY_MAP.get(data.get("priority", ""), 0.5))
+    vector.append(SLEEP_TENSOR_MAP.get(data.get("sleep_schedule", ""), 0.5))
+    vector.append(CLEANLINESS_TENSOR_MAP.get(data.get("cleanliness", ""), 0.5))
+    vector.append(NOISE_TENSOR_MAP.get(data.get("noise_tolerance", ""), 0.5))
+    vector.append(GUEST_TENSOR_MAP.get(data.get("guest_frequency",""), 0.5))
+    vector.append(normalize_budget(str(data.get("budget", ""))))
+    vector.append(PRIORITY_TENSOR_MAP.get(data.get("priority", ""), 0.5))
     vector.append(DISTRICT_MAP.get(data.get("district", ""), 0.0))
     
     return vector

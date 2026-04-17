@@ -1,51 +1,55 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { authenticatedFetch } from '../../lib/api'
 import Header from '../../components/Header'
 import MatchCard from '../../components/MatchCard/MatchCard'
 import './MatchesPage.css'
-
-const matchImg1 = new URL('../../assets/1.JPG', import.meta.url).href
-const matchImg2 = new URL('../../assets/2.JPG', import.meta.url).href
-const matchImg3 = new URL('../../assets/3.JPG', import.meta.url).href
-
-const MOCK_MATCHES = [
-  {
-    id: 'm1',
-    name: 'Quân Xi',
-    age: 20,
-    university: 'ĐH Bách Khoa TP.HCM',
-    tags: ['Dậy sớm', 'Gọn gàng', 'Không hút thuốc', 'Hướng nội'],
-    matchPercentage: 95,
-    image: matchImg1
-  },
-  {
-    id: 'm2',
-    name: 'Bảo Phạm',
-    age: 19,
-    university: 'ĐH Khoa học Tự nhiên',
-    tags: ['Cú đêm', 'Thoải mái', 'Hòa đồng', 'Thích nấu ăn'],
-    matchPercentage: 88,
-    image: matchImg2
-  },
-  {
-    id: 'm3',
-    name: 'A Di Đà Phật',
-    age: 21,
-    university: 'ĐH Kinh tế TP.HCM',
-    tags: ['Không hút thuốc', 'Gọn gàng', 'Hướng ngoại'],
-    matchPercentage: 82,
-    image: matchImg3
-  },
-  {
-    id: 'm4',
-    name: 'Ngọc Lan',
-    age: 18,
-    university: 'ĐH Tôn Đức Thắng',
-    tags: ['Dậy sớm', 'Không nuôi pet', 'Thích yên tĩnh'],
-    matchPercentage: 75,
-    image: matchImg1
-  }
-]
-
 export default function MatchesPage() {
+  const [matches, setMatches] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        const data = await authenticatedFetch('/matches/my-matches');
+        // The backend dictates the shape. Map exactly what exists.
+        setMatches(data.matches || data || []);
+      } catch (err: any) {
+        setError(err.message || 'Infrastructure Failure: Match Engine inaccessible.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMatches();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="matches-layout">
+        <Header />
+        <main className="matches-main container" style={{display:'flex',justifyContent:'center',alignItems:'center'}}>
+          <div style={{ padding: '2rem', color: '#6b7280' }}>Loading matches...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="matches-layout">
+        <Header />
+        <main className="matches-main container" style={{display:'flex',justifyContent:'center',alignItems:'center'}}>
+          <div style={{ background: '#fee2e2', color: '#991b1b', padding: '1.5rem', borderRadius: '8px', border: '1px solid #f87171' }}>
+            <h2 style={{ marginBottom: '1rem', fontWeight: 'bold' }}>SYSTEM HALTED</h2>
+            <p>{error}</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="matches-layout">
       <Header />
@@ -63,16 +67,28 @@ export default function MatchesPage() {
           </button>
         </header>
 
-        <section className="matches-grid">
-          {MOCK_MATCHES.map(match => (
-            <MatchCard 
-              key={match.id}
-              {...match}
-              onSkip={() => console.log('Skip', match.name)}
-              onConnect={() => console.log('Connect', match.name)}
-            />
-          ))}
-        </section>
+        {matches.length === 0 ? (
+          <div style={{ padding: '3rem', textAlign: 'center', color: '#6b7280' }}>
+            No compatible properties found in the current vector space.
+          </div>
+        ) : (
+          <section className="matches-grid">
+            {matches.map(match => (
+              <MatchCard 
+                key={match.user_id}
+                id={match.user_id}
+                name={match.full_name || match.username}
+                age={match.age}
+                university={match.university}
+                matchPercentage={match.match_score}
+                image={match.avatar_url}
+                tags={[]}
+                onSkip={() => setMatches(prev => prev.filter(m => m.user_id !== match.user_id))}
+                onConnect={() => navigate('/chat', { state: { targetPartnerId: match.user_id } })}
+              />
+            ))}
+          </section>
+        )}
       </main>
     </div>
   )

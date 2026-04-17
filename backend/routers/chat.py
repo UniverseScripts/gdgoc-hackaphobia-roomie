@@ -1,4 +1,5 @@
 import json
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from typing import Annotated, List, Dict
 from pydantic import BaseModel      
 from datetime import datetime
@@ -18,6 +19,7 @@ def get_thread_id(user1: str, user2: str) -> str:
 
 class MessageSchema(BaseModel):
     id: str
+    thread_id: str
     sender_id: str
     receiver_id: str
     content: str

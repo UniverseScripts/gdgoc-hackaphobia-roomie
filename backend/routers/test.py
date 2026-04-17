@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from core.config import db
-from schemas.test import TestSubmission
+from schemas.rbac_customer.test import TestSubmission
 from services.vector_logic import processing_submissions
 from routers.auth import get_current_user
 from typing import Annotated
