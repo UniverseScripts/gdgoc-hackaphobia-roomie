@@ -1,25 +1,47 @@
-import { useState, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { authenticatedFetch } from '../../lib/api'
-import { useAuth } from '../../context/AuthContext'
-import './OnboardingPage.css'
+import './OnboardingPage.css' // Retaining original CSS mapping
 
-/* ── Static Data ── */
+/* ── Static Data Matrices ── */
 const SLEEP_OPTIONS = [
   { value: 'early', label: 'Ngủ sớm (Trước 11h)' },
   { value: 'late',  label: 'Cú đêm (Sau 12h)' },
 ]
 
 const CLEANLINESS_OPTIONS = [
-  { value: 'very_clean', label: 'Rất gọn gàng',  desc: 'Luôn dọn dẹp mỗi ngày' },
-  { value: 'normal',     label: 'Bình thường',    desc: 'Dọn dẹp hàng tuần' },
-  { value: 'relaxed',    label: 'Thoải mái',      desc: 'Không quá khắt khe' },
+  { value: 'very_clean', label: 'Rất gọn gàng' },
+  { value: 'normal',     label: 'Bình thường' },
+  { value: 'relaxed',    label: 'Thoải mái' },
 ]
 
-const PERSONALITY_OPTIONS = [
-  { value: 'introverted', label: 'Hướng nội' },
-  { value: 'ambivert',    label: 'Hòa đồng' },
-  { value: 'extroverted', label: 'Hướng ngoại' },
+const NOISE_TOLERANCE_OPTIONS = [
+  { value: 'low',    label: 'Tuyệt đối yên tĩnh' },
+  { value: 'medium', label: 'Bình thường' },
+  { value: 'high',   label: 'Không quan tâm' },
+]
+
+const GUEST_FREQUENCY_OPTIONS = [
+  { value: 'never',     label: 'Không bao giờ' },
+  { value: 'sometimes', label: 'Thỉnh thoảng' },
+  { value: 'often',     label: 'Thường xuyên' },
+]
+
+const PRIORITY_OPTIONS = [
+  { value: 'price',    label: 'Giá cả' },
+  { value: 'location', label: 'Vị trí' },
+  { value: 'roommate', label: 'Tính cách bạn cùng phòng' },
+  { value: 'amenity',  label: 'Tiện ích chung' },
+]
+
+const DISTRICT_OPTIONS = [
+  { value: 'District 1', label: 'Quận 1' },
+  { value: 'District 3', label: 'Quận 3' },
+  { value: 'District 4', label: 'Quận 4' },
+  { value: 'District 5', label: 'Quận 5' },
+  { value: 'District 7', label: 'Quận 7' },
+  { value: 'Binh Thanh', label: 'Bình Thạnh' },
+  { value: 'Thu Duc',    label: 'Thủ Đức' },
 ]
 
 const BUDGET_MIN = 0
@@ -29,199 +51,179 @@ const BUDGET_STEP = 100_000
 const formatVND = (value: number) =>
   new Intl.NumberFormat('vi-VN').format(value) + ' đ'
 
-const OnboardingPage = () => {
-  /* ── State ── */
-  const [username,    setUsername]    = useState('')
-  const [fullName,    setFullName]    = useState('')
-  const [age,         setAge]         = useState('')
-  const [university,  setUniversity]  = useState('')
-  const [budget,      setBudget]      = useState(2_500_000)
-  const [sleep,       setSleep]       = useState('early')
-  const [cleanliness, setCleanliness] = useState('very_clean')
-  const [personality, setPersonality] = useState('introverted')
-
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError]         = useState<string | null>(null)
-
+export default function PersonaTestPage() {
   const navigate = useNavigate()
-  const { userProfile } = useAuth()
 
-  /* Dynamic slider track fill */
-  const budgetPercent = useCallback(
-    () => ((budget - BUDGET_MIN) / (BUDGET_MAX - BUDGET_MIN)) * 100,
-    [budget]
-  )
+  /* ── State: Schema Vectors ── */
+  const [sleep, setSleep] = useState('')
+  const [cleanliness, setCleanliness] = useState('')
+  const [noiseTolerance, setNoiseTolerance] = useState('')
+  const [guestFrequency, setGuestFrequency] = useState('')
+  const [priority, setPriority] = useState('')
+  const [district, setDistrict] = useState('')
+
+  /* ── State: Budget Hooks ── */
+  const [budgetMin, setBudgetMin] = useState(1_500_000)
+  const [budgetMax, setBudgetMax] = useState(4_000_000)
+
+  /* ── State: Execution ── */
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
+    e.preventDefault()
+
+    if (!sleep || !cleanliness || !noiseTolerance || !guestFrequency || !priority || !district) {
+      setError("Dữ liệu không hoàn chỉnh. Cần chọn tất cả các trường.")
+      return
+    }
+
+    setIsSubmitting(true)
+    setError(null)
 
     try {
-      // Transmit the payload across the secure bridge
-      await authenticatedFetch('/api/onboarding/profile', {
+      await authenticatedFetch('/api/test/submit', {
         method: 'POST',
         body: JSON.stringify({
-          username: username,
-          full_name: fullName,
-          age: Number(age),
-          university: university,
-          // Include any test vectors or preferences captured in the form state
-          preferences: { budget, sleep, cleanliness, personality }
+          sleep_schedule: sleep,
+          cleanliness: cleanliness,
+          noise_tolerance: noiseTolerance,
+          guest_frequency: guestFrequency,
+          priority: priority,
+          district: district,
+          budget: String(`${budgetMin}-${budgetMax}`) // Cast to string per backend requirement
         })
-      });
+      })
 
-      // UPON 200 OK: The backend has generated the user record and vectors.
-      // Route strictly to the market grid.
-      navigate('/landing'); 
+      navigate('/')
+
     } catch (err: any) {
-      setError(err.message || 'Infrastructure Failure: Payload rejected by the gatekeeper.');
+      setError(err.message || 'Infrastructure Failure: Vertex AI normalization rejected the payload.')
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="onboarding">
-
-      {/* ══ Sticky Top Bar ══ */}
+    <div className="ob-layout">
       <header className="ob-header">
-        <div className="ob-header__inner">
-          <Link to="/" className="ob-header__logo" aria-label="RooMie Home">
-            <img src="/Logo.png" alt="RooMie" />
-          </Link>
-          <div className="ob-header__step">
-            <span className="ob-header__step-num">BƯỚC 1 CỦA 3</span>
-            <span className="ob-header__step-desc">Hồ Sơ cá nhân &amp; Lối sống</span>
-          </div>
+        <div className="ob-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Roomie
         </div>
-        {/* Progress Bar */}
-        <div className="ob-progress" role="progressbar" aria-valuenow={33} aria-valuemin={0} aria-valuemax={100}>
-          <div className="ob-progress__fill" style={{ width: '33%' }} />
+        <div className="ob-steps">
+          <div className="ob-step">
+            <span className="ob-step-num">1</span>
+            <span className="ob-step-label">Hồ sơ</span>
+          </div>
+          <div className="ob-step ob-step--active">
+            <span className="ob-step-num">2</span>
+            <span className="ob-step-label">Lối sống</span>
+          </div>
         </div>
       </header>
 
-      {/* ══ Main Form Card ══ */}
       <main className="ob-main">
-        <form className="ob-card" onSubmit={handleSubmit} noValidate>
-          <h1 className="ob-card__title">Hoàn thiện Hồ sơ của bạn</h1>
-          <p className="ob-card__subtitle">
-            Giúp RooMie tìm cho bạn những người bạn cùng phòng và căn phòng phù hợp nhất.
-          </p>
-
-          {/* ─── SECTION 1: Basic Info ─── */}
-          <div className="ob-section">
-            <div className="ob-section__title">
-              <span className="ob-section__icon" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              </span>
-              <h2>Thông tin cơ bản</h2>
-            </div>
-            
-            <div className="ob-row">
-              <div className="ob-field">
-                <label className="ob-label" htmlFor="ob-username">Tên đăng nhập (Username)</label>
-                <input
-                  id="ob-username"
-                  type="text"
-                  className="ob-input"
-                  placeholder="VD: nguyenvana_99"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
-              <div className="ob-field">
-                <label className="ob-label" htmlFor="ob-age">Tuổi</label>
-                <input
-                  id="ob-age"
-                  type="number"
-                  className="ob-input"
-                  placeholder="VD: 20"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="ob-row">
-              <div className="ob-field">
-                <label className="ob-label" htmlFor="ob-fullname">Họ và Tên</label>
-                <input
-                  id="ob-fullname"
-                  type="text"
-                  className="ob-input"
-                  placeholder="VD: Nguyễn Văn A"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  autoComplete="name"
-                />
-              </div>
-              <div className="ob-field">
-                <label className="ob-label" htmlFor="ob-university">Trường Đại học / Cao đẳng</label>
-                <input
-                  id="ob-university"
-                  type="text"
-                  className="ob-input"
-                  placeholder="VD: ĐH Bách Khoa TPHCM"
-                  value={university}
-                  onChange={(e) => setUniversity(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Budget Slider */}
-            <div className="ob-budget">
-              <div className="ob-budget__header">
-                <label className="ob-label" htmlFor="ob-budget-slider">
-                  Ngân sách mong muốn (VNĐ/Tháng)
-                </label>
-                <span className="ob-budget__value">{formatVND(budget)}</span>
-              </div>
-              <input
-                id="ob-budget-slider"
-                type="range"
-                className="ob-slider"
-                min={BUDGET_MIN}
-                max={BUDGET_MAX}
-                step={BUDGET_STEP}
-                value={budget}
-                onChange={(e) => setBudget(Number(e.target.value))}
-                style={{
-                  background: `linear-gradient(to right,
-                    var(--color-brand) 0%,
-                    var(--color-brand) ${budgetPercent()}%,
-                    #e5e7eb ${budgetPercent()}%,
-                    #e5e7eb 100%)`
-                }}
-              />
-              <div className="ob-slider__range">
-                <span>0 đ</span>
-                <span>10.000.000 đ</span>
-              </div>
-            </div>
+        <div className="ob-content-wrapper">
+          <div className="ob-hero">
+            <h1 className="ob-title">Bài trắc nghiệm phong cách sống</h1>
+            <p className="ob-subtitle">Thuật toán AI sẽ dựa vào đây để tính toán độ tương thích của bạn với bạn cùng phòng và không gian sống.</p>
           </div>
 
-          {/* ─── SECTION 2: Lifestyle ─── */}
-          <div className="ob-section">
-            <div className="ob-section__title">
-              <span className="ob-section__icon" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-              </span>
-              <h2>Sở thích &amp; Lối sống</h2>
-            </div>
-
-            {/* Sleep schedule */}
-            <div className="ob-field">
-              <label className="ob-label">Khung giờ ngủ</label>
-              <div className="ob-pills" role="group" aria-label="Khung giờ ngủ">
-                {SLEEP_OPTIONS.map((opt) => (
+          <form onSubmit={handleSubmit} className="ob-form">
+            
+            {/* ── District ── */}
+            <div className="ob-section">
+              <div className="ob-section-header">
+                <h2 className="ob-section-title">Khu vực ưu tiên</h2>
+              </div>
+              <div className="ob-options-grid">
+                {DISTRICT_OPTIONS.map(opt => (
                   <button
                     key={opt.value}
                     type="button"
-                    id={`sleep-${opt.value}`}
-                    className={`ob-pill ob-pill--dark ${sleep === opt.value ? 'ob-pill--selected' : ''}`}
+                    className={`ob-pill ${district === opt.value ? 'ob-pill--active-yellow' : ''}`}
+                    onClick={() => setDistrict(opt.value)}
+                  >
+                    {district === opt.value && (
+                      <svg className="ob-pill__check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    )}
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Budget Slider ── */}
+            <div className="ob-section">
+              <div className="ob-section-header">
+                <h2 className="ob-section-title">Ngân sách hàng tháng (VNĐ)</h2>
+              </div>
+              <div className="budget-display">
+                <span>{formatVND(budgetMin)}</span>
+                <span>-</span>
+                <span>{formatVND(budgetMax)}</span>
+              </div>
+              <div className="budget-sliders">
+                <input
+                  type="range"
+                  min={BUDGET_MIN}
+                  max={BUDGET_MAX}
+                  step={BUDGET_STEP}
+                  value={budgetMin}
+                  onChange={(e) => {
+                    const val = Number(e.target.value)
+                    if (val <= budgetMax) setBudgetMin(val)
+                  }}
+                />
+                <input
+                  type="range"
+                  min={BUDGET_MIN}
+                  max={BUDGET_MAX}
+                  step={BUDGET_STEP}
+                  value={budgetMax}
+                  onChange={(e) => {
+                    const val = Number(e.target.value)
+                    if (val >= budgetMin) setBudgetMax(val)
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* ── Priority ── */}
+            <div className="ob-section">
+              <div className="ob-section-header">
+                <h2 className="ob-section-title">Yếu tố quan trọng nhất</h2>
+              </div>
+              <div className="ob-options-grid">
+                {PRIORITY_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`ob-pill ${priority === opt.value ? 'ob-pill--active-yellow' : ''}`}
+                    onClick={() => setPriority(opt.value)}
+                  >
+                    {priority === opt.value && (
+                      <svg className="ob-pill__check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    )}
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Sleep ── */}
+            <div className="ob-section">
+              <div className="ob-section-header">
+                <h2 className="ob-section-title">Lịch sinh hoạt</h2>
+              </div>
+              <div className="ob-options-grid">
+                {SLEEP_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`ob-pill ${sleep === opt.value ? 'ob-pill--active-yellow' : ''}`}
                     onClick={() => setSleep(opt.value)}
-                    aria-pressed={sleep === opt.value}
                   >
                     {sleep === opt.value && (
                       <svg className="ob-pill__check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
@@ -232,45 +234,44 @@ const OnboardingPage = () => {
               </div>
             </div>
 
-            {/* Cleanliness */}
-            <div className="ob-field">
-              <label className="ob-label">Mức độ sạch sẽ</label>
-              <div className="ob-cards" role="group" aria-label="Mức độ sạch sẽ">
-                {CLEANLINESS_OPTIONS.map((opt) => (
+            {/* ── Cleanliness ── */}
+            <div className="ob-section">
+              <div className="ob-section-header">
+                <h2 className="ob-section-title">Mức độ gọn gàng</h2>
+              </div>
+              <div className="ob-options-grid">
+                {CLEANLINESS_OPTIONS.map(opt => (
                   <button
                     key={opt.value}
                     type="button"
-                    id={`clean-${opt.value}`}
-                    className={`ob-card-opt ${cleanliness === opt.value ? 'ob-card-opt--selected' : ''}`}
+                    className={`ob-pill ${cleanliness === opt.value ? 'ob-pill--active-yellow' : ''}`}
                     onClick={() => setCleanliness(opt.value)}
-                    aria-pressed={cleanliness === opt.value}
                   >
                     {cleanliness === opt.value && (
-                      <span className="ob-card-opt__badge">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><polyline points="20 6 9 17 4 12"/></svg>
-                      </span>
+                      <svg className="ob-pill__check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                     )}
-                    <span className="ob-card-opt__label">{opt.label}</span>
-                    <span className="ob-card-opt__desc">{opt.desc}</span>
+                    <div className="ob-pill__content">
+                      <span className="ob-pill__label">{opt.label}</span>
+                    </div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Personality */}
-            <div className="ob-field">
-              <label className="ob-label">Tính cách / Giao tiếp</label>
-              <div className="ob-pills" role="group" aria-label="Tính cách">
-                {PERSONALITY_OPTIONS.map((opt) => (
+            {/* ── Noise Tolerance ── */}
+            <div className="ob-section">
+              <div className="ob-section-header">
+                <h2 className="ob-section-title">Khả năng chịu ồn</h2>
+              </div>
+              <div className="ob-options-grid">
+                {NOISE_TOLERANCE_OPTIONS.map(opt => (
                   <button
                     key={opt.value}
                     type="button"
-                    id={`personality-${opt.value}`}
-                    className={`ob-pill ob-pill--yellow ${personality === opt.value ? 'ob-pill--active-yellow' : ''}`}
-                    onClick={() => setPersonality(opt.value)}
-                    aria-pressed={personality === opt.value}
+                    className={`ob-pill ${noiseTolerance === opt.value ? 'ob-pill--active-yellow' : ''}`}
+                    onClick={() => setNoiseTolerance(opt.value)}
                   >
-                    {personality === opt.value && (
+                    {noiseTolerance === opt.value && (
                       <svg className="ob-pill__check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                     )}
                     {opt.label}
@@ -278,24 +279,45 @@ const OnboardingPage = () => {
                 ))}
               </div>
             </div>
-          </div>
 
-          {/* Error Barrier */}
-          {error && (
-            <div style={{ background: '#fee2e2', color: '#991b1b', padding: '1rem', borderRadius: '4px', marginBottom: '1.5rem', border: '1px solid #f87171' }}>
-              <strong>SYSTEM REJECTION:</strong> {error}
+            {/* ── Guest Frequency ── */}
+            <div className="ob-section">
+              <div className="ob-section-header">
+                <h2 className="ob-section-title">Tần suất dẫn bạn về nhà</h2>
+              </div>
+              <div className="ob-options-grid">
+                {GUEST_FREQUENCY_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`ob-pill ${guestFrequency === opt.value ? 'ob-pill--active-yellow' : ''}`}
+                    onClick={() => setGuestFrequency(opt.value)}
+                  >
+                    {guestFrequency === opt.value && (
+                      <svg className="ob-pill__check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    )}
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
 
-          {/* CTA */}
-          <button type="submit" id="ob-submit-btn" className="ob-submit" disabled={isSubmitting}>
-            {isSubmitting ? 'ĐANG ĐỒNG BỘ DỮ LIỆU...' : 'Lưu hồ sơ & Tiếp tục'}
-            {!isSubmitting && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>}
-          </button>
-        </form>
+            {/* ── Error Barrier ── */}
+            {error && (
+              <div style={{ background: '#fee2e2', color: '#991b1b', padding: '1rem', borderRadius: '4px', marginBottom: '1.5rem', border: '1px solid #f87171' }}>
+                <strong>SYSTEM ERROR:</strong> {error}
+              </div>
+            )}
+
+            {/* ── Execution CTA ── */}
+            <button type="submit" id="ob-submit-btn" className="ob-submit" disabled={isSubmitting}>
+              {isSubmitting ? 'ĐANG TÍNH TOÁN VECTOR...' : 'Hoàn tất trắc nghiệm'}
+              {!isSubmitting && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>}
+            </button>
+
+          </form>
+        </div>
       </main>
     </div>
   )
 }
-
-export default OnboardingPage

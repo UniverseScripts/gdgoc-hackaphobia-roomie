@@ -8,3 +8,4 @@ __pycache__/
 .env.example  
 hackaphobia-roomie-7288262340d8.json
 scripts/
+backend/dummy.json

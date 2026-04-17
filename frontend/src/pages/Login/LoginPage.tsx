@@ -14,7 +14,7 @@ const LoginPage = () => {
   const handleGoogleLogin = async () => {
     try {
       await loginWithGoogle()
-      navigate('/') // redirect to home after login
+      navigate('/onboarding')
     } catch (error) {
       console.error(error)
     }
@@ -23,7 +23,7 @@ const LoginPage = () => {
   const handleFacebookLogin = async () => {
     try {
       await loginWithFacebook()
-      navigate('/')
+      navigate('/onboarding')
     } catch (error) {
       console.error(error)
     }
