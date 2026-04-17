@@ -10,3 +10,8 @@ class MarketSearchQuery(BaseModel):
 class Ratings(BaseModel):
     stars: int = Field(..., ge=1, le=5)
     review: str
+
+class ReviewCreate(BaseModel):
+    property_id: str
+    stars: int = Field(..., ge=1, le=5)
+    comment: Optional[str] = None

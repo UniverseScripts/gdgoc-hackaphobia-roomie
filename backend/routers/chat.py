@@ -5,12 +5,16 @@ from datetime import datetime
 from jose import jwt, JWTError
 from starlette import status
 from google.cloud.firestore_v1.base_query import FieldFilter, Or
+from google.cloud import firestore
 
 from services.chat_manager import manager
 from core.config import db
 from routers.auth import get_current_user, SECRET_KEY, ALGORITHM
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
+
+def get_thread_id(user1: str, user2: str) -> str:
+    return "_".join(sorted([user1, user2]))
 
 class MessageSchema(BaseModel):
     id: str
@@ -77,27 +81,29 @@ async def get_conversations(current_user: Annotated[dict, Depends(get_current_us
     return conversations
 
 @router.get("/history/{partner_id}", response_model=List[MessageSchema])
-async def get_chat_history(partner_id: str, current_user: Annotated[dict, Depends(get_current_user)]):
+async def get_chat_history(
+    partner_id: str, 
+    limit: int = 50, 
+    start_after_timestamp: str = None, 
+    current_user: dict = Depends(get_current_user)
+):
     current_uid = current_user['id']
+    thread_id = get_thread_id(current_uid, partner_id)
     
-    # Fetch all messages between these two users
-    filter_sent = FieldFilter("sender_id", "==", current_uid)
-    filter_received = FieldFilter("receiver_id", "==", partner_id)
+    query = db.collection("messages").where(
+        filter=FieldFilter("thread_id", "==", thread_id)
+    ).order_by("timestamp", direction=firestore.Query.DESCENDING).limit(limit)
     
-    # Note: Firestore requires composite indexes for complex ORs. 
-    # For a chat app, fetching both streams and sorting in memory is often faster and avoids index hell.
-    sent_stream = [doc.to_dict() | {'id': doc.id} for doc in db.collection('messages')
-                   .where(filter=FieldFilter("sender_id", "==", current_uid))
-                   .where(filter=FieldFilter("receiver_id", "==", partner_id)).stream()]
-                   
-    received_stream = [doc.to_dict() | {'id': doc.id} for doc in db.collection('messages')
-                       .where(filter=FieldFilter("sender_id", "==", partner_id))
-                       .where(filter=FieldFilter("receiver_id", "==", current_uid)).stream()]
-    
-    all_messages = sent_stream + received_stream
-    all_messages.sort(key=lambda x: x['timestamp'])
-    
-    return all_messages
+    if start_after_timestamp:
+        # Note: Depending on the timestamp structure, it might need casting to datetime object.
+        query = query.start_after({
+            "timestamp": start_after_timestamp
+        })
+        
+    results = [doc.to_dict() | {'id': doc.id} for doc in query.stream()]
+    # Reverse to maintain chronological order (oldest to newest) for frontend rendering
+    results.reverse()
+    return results
 
 @router.websocket("/ws/{user_id}/{token}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str):
@@ -131,7 +137,8 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str):
                     "sender_id": user_id,
                     "receiver_id": receiver_id,
                     "content": content,
-                    "timestamp": datetime.now(timezone.utc)
+                    "timestamp": datetime.now(timezone.utc),
+                    "thread_id": get_thread_id(user_id, receiver_id)
                 }
                 db.collection('messages').add(new_msg)
             except Exception as db_error:

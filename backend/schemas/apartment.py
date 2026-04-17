@@ -15,6 +15,8 @@ class ApartmentBase(BaseModel):
     amenities: List[str] = []
     embedding: Optional[List[float]] = None
     availability: bool = True
+    average_rating: float = 0.0
+    total_reviews: int = 0
 
 class ApartmentCreate(ApartmentBase):
     pass
