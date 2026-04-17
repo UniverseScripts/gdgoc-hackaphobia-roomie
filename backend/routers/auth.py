@@ -3,6 +3,16 @@ from starlette import status
 from services.auth import verify_admin_claim
 from core.config import db
 from firebase_admin import auth
+from services.auth import verify_firebase_token, SECRET_KEY, ALGORITHM
+
+async def get_current_user(token: dict = Depends(verify_firebase_token)):
+    uid = token.get("uid")
+    user_doc = db.collection('users').document(uid).get()
+    if not user_doc.exists:
+        return {"id": uid, "email": token.get("email"), "role": token.get("role")}
+    user_data = user_doc.to_dict()
+    user_data["id"] = uid
+    return user_data
 
 router = APIRouter(prefix="/auth", tags=['auth'])
 

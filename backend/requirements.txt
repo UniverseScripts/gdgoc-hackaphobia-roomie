@@ -55,6 +55,7 @@ idna==3.11
 importlib-metadata==8.7.1
 itsdangerous==2.2.0
 jinja2==3.1.6
+jose==1.0.0
 markdown-it-py==4.0.0
 markupsafe==3.0.3
 mdurl==0.1.2
@@ -83,6 +84,7 @@ pygments==2.20.0
 pyjwt==2.12.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
+python-jose[cryptography]==3.3.0
 python-multipart==0.0.24
 pyyaml==6.0.3
 requests==2.33.1

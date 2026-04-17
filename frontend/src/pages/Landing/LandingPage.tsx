@@ -27,37 +27,6 @@ const FEATURED_AREAS = [
   },
 ]
 
-const VERIFIED_LISTINGS = [
-  {
-    id: 1,
-    price: '3.5Tr',
-    title: 'Phòng trọ full nội thất, giờ giấc tự do',
-    location: 'Phường 14, Quận 10',
-    image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=400&auto=format&fit=crop',
-  },
-  {
-    id: 2,
-    price: '2.8Tr',
-    title: 'KTX Cao cấp giường tầng riêng tư',
-    location: 'Linh Trung, Thủ Đức',
-    image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=400&auto=format&fit=cro',
-  },
-  {
-    id: 3,
-    price: '4.2Tr',
-    title: 'Studio Căn hộ mini mới xây góc cao',
-    location: 'Phường 25, Bình Thạnh',
-    image: 'https://images.unsplash.com/photo-1484154218962-a197022b5858?q=80&w=400&auto=format&fit=crop',
-  },
-  {
-    id: 4,
-    price: '2.2Tr',
-    title: 'Phòng trọ giá rẻ gần trường Tôn Đức Thắng',
-    location: 'Tân Phong, Quận 7',
-    image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=400&auto=format&fit=crop',
-  },
-]
-
 type SearchMode = 'room' | 'roommate'
 
 const LandingPage = () => {

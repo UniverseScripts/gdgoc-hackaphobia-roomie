@@ -33,7 +33,6 @@ jobs:
       - name: Build Vite SPA Sandbox
         working-directory: ./frontend
         env:
-          VITE_GOOGLE_MAPS_VECTOR_ID: ${{ secrets.VITE_GOOGLE_MAPS_VECTOR_ID }}
           VITE_API_GATEWAY_URL: ${{ secrets.VITE_API_GATEWAY_URL }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: npm run build

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 import jwt
 from datetime import datetime, timezone, timedelta
 from core.config import db, settings
-from schemas.sponsor import SponsorRequest
+from schemas.rbac_customer.sponsor import SponsorRequest
 
 router = APIRouter(prefix="/sponsor", tags=["Sponsor"])
 

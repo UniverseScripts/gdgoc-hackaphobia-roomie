@@ -1,12 +1,11 @@
 from enum import Enum
-from pydantic import BaseModel, EmailStr
-from typing import  Optional
+from pydantic import BaseModel
+from typing import Optional, Literal
 
-class Role(Enum):
+class Role(str, Enum):
     CUSTOMER = "customer"
     LANDLORD = "landlord"
     ADMIN = "admin"
-
 
 class UserBase(BaseModel):
     username: str
@@ -14,14 +13,31 @@ class UserBase(BaseModel):
     age: Optional[int] = None
     gender: Optional[str] = None
     profile_completed: bool = False
-    role: Role
 
 class CustomerUserStore(UserBase):
-    university: Optional[str] = None
+    role: Literal[Role.CUSTOMER] = Role.CUSTOMER
+    university: str
+    major: Optional[str] = None
+    bio: Optional[str] = None
 
 class LandlordUserStore(UserBase):
-    business_id: Optional[str] = None
+    role: Literal[Role.LANDLORD] = Role.LANDLORD
+    business_id: str
+    business_name: Optional[str] = None
+    bio: Optional[str] = None
 
-class UserResponse(UserBase):
+class UserResponse(BaseModel):
     id: str
     email: str
+    username: str
+    role: Role
+    full_name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    profile_completed: bool = False
+    
+    university: Optional[str] = None
+    major: Optional[str] = None
+    business_id: Optional[str] = None
+    business_name: Optional[str] = None
+    bio: Optional[str] = None

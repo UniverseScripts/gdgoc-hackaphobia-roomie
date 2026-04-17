@@ -5,10 +5,6 @@ import type { ChatMessage } from '../../types'
 import { useAuth } from '../../context/AuthContext'
 import { authenticatedFetch } from '../../lib/api'
 
-const getThreadId = (uid1: string, uid2: string): string => {
-  return [uid1, uid2].sort().join('_');
-};
-
 export default function ChatPage() {
   const { user } = useAuth();
   const [inbox, setInbox] = useState<any[]>([]);

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { authenticatedFetch } from '../../lib/api'
 import './OnboardingPage.css'

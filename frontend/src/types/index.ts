@@ -7,7 +7,11 @@ export interface UserProfile {
   email: string;
   full_name?: string;
   age?: number;
+  gender?: string;
   university?: string;
+  major?: string;
+  bio?: string;
+  business_id?: string;
   profile_completed: boolean;
 }
 
@@ -21,8 +25,10 @@ export interface Apartment {
   size: number;
   district: string;
   address?: string;
+  coordinates?: number[];
   images: string[];
   amenities: string[];
+  availability?: boolean;
   average_rating: number; // INJECTED FROM PHASE 3 BACKEND
   total_reviews: number;  // INJECTED FROM PHASE 3 BACKEND
 }
