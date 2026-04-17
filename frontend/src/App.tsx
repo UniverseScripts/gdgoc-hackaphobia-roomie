@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import LandingPage from './pages/Landing/LandingPage'
 import LoginPage from './pages/Login/LoginPage'
-import OnboardingPage from './pages/Onboarding/OnboardingPage'
+import OnboardingPage from './pages/PersonaTest/PersonaTestPage'
 import ListingsPage from './pages/Listings/ListingsPage'
 import MatchesPage from './pages/Matches/MatchesPage'
 import ChatPage from './pages/Chat/ChatPage'

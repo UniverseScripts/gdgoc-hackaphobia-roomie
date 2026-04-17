@@ -3,6 +3,7 @@ import './ChatPage.css'
 import { useEffect, useState, useRef } from 'react'
 import type { ChatMessage } from '../../types'
 import { useAuth } from '../../context/AuthContext'
+import { authenticatedFetch } from '../../lib/api'
 
 const getThreadId = (uid1: string, uid2: string): string => {
   return [uid1, uid2].sort().join('_');
@@ -21,11 +22,7 @@ export default function ChatPage() {
     if (!user) return;
     const fetchInbox = async () => {
       try {
-        const res = await fetch('/api/chat/inbox', {
-          headers: { Authorization: `Bearer ${await user.getIdToken()}` }
-        });
-        if (!res.ok) throw new Error('Infrastructure Failure: Inbox resolution failed');
-        setInbox(await res.json());
+        const res = await authenticatedFetch('/api/chat/inbox');
       } catch (err: any) {
         setError(err.message);
       }
@@ -37,17 +34,12 @@ export default function ChatPage() {
     if (!user || !activeChat) return;
     const loadHistoryAndConnect = async () => {
       try {
-        const token = await user.getIdToken();
-        const res = await fetch(`/api/chat/history/${activeChat.id}?limit=50`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Infrastructure Failure: History resolution failed');
-        const data = await res.json();
-        setMessages(data.messages || []);
+        const res = await authenticatedFetch(`/api/chat/history/${activeChat.id}?limit=50`);
+        setMessages(res.messages || []);
 
         const thread_id = getThreadId(user.uid, activeChat.id);
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        ws.current = new WebSocket(`${protocol}//${window.location.host}/api/chat/ws/${user.uid}?token=${token}`);
+        ws.current = new WebSocket(`${protocol}//${window.location.host}/api/chat/ws/${user.uid}?token=${res.token}`);
         
         ws.current.onmessage = (event) => {
           const incoming = JSON.parse(event.data);

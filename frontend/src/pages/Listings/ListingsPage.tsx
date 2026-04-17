@@ -2,6 +2,7 @@ import Header from '../../components/Header'
 import './ListingsPage.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import L from 'leaflet'
+import { authenticatedFetch } from '../../lib/api'
 import 'leaflet/dist/leaflet.css'
 
 // --- Kiểu dữ liệu ---
@@ -168,7 +169,7 @@ export default function ListingsPage() {
   useEffect(() => {
     const fetchMarket = async () => {
       try {
-        const res = await fetch('/api/market')
+        const res = await authenticatedFetch('/api/market')
         if (!res.ok) throw new Error('Infrastructure Failure: Market API execution dropped. The NoSQL request failed.')
         const data = await res.json()
         setListings(data.apartments || [])

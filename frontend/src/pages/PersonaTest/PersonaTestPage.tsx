@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { authenticatedFetch } from '../../lib/api'
+import { useAuth } from '../../context/AuthContext'
 import './OnboardingPage.css'
 
 /* ── Static Data ── */
@@ -29,12 +31,20 @@ const formatVND = (value: number) =>
 
 const OnboardingPage = () => {
   /* ── State ── */
+  const [username,    setUsername]    = useState('')
   const [fullName,    setFullName]    = useState('')
+  const [age,         setAge]         = useState('')
   const [university,  setUniversity]  = useState('')
   const [budget,      setBudget]      = useState(2_500_000)
   const [sleep,       setSleep]       = useState('early')
   const [cleanliness, setCleanliness] = useState('very_clean')
   const [personality, setPersonality] = useState('introverted')
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError]         = useState<string | null>(null)
+
+  const navigate = useNavigate()
+  const { userProfile } = useAuth()
 
   /* Dynamic slider track fill */
   const budgetPercent = useCallback(
@@ -42,10 +52,33 @@ const OnboardingPage = () => {
     [budget]
   )
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // TODO: POST /onboarding/profile then navigate to step 2
-    console.log({ fullName, university, budget, sleep, cleanliness, personality })
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // Transmit the payload across the secure bridge
+      await authenticatedFetch('/api/onboarding/profile', {
+        method: 'POST',
+        body: JSON.stringify({
+          username: username,
+          full_name: fullName,
+          age: Number(age),
+          university: university,
+          // Include any test vectors or preferences captured in the form state
+          preferences: { budget, sleep, cleanliness, personality }
+        })
+      });
+
+      // UPON 200 OK: The backend has generated the user record and vectors.
+      // Route strictly to the market grid.
+      navigate('/landing'); 
+    } catch (err: any) {
+      setError(err.message || 'Infrastructure Failure: Payload rejected by the gatekeeper.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -83,6 +116,31 @@ const OnboardingPage = () => {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </span>
               <h2>Thông tin cơ bản</h2>
+            </div>
+            
+            <div className="ob-row">
+              <div className="ob-field">
+                <label className="ob-label" htmlFor="ob-username">Tên đăng nhập (Username)</label>
+                <input
+                  id="ob-username"
+                  type="text"
+                  className="ob-input"
+                  placeholder="VD: nguyenvana_99"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+              </div>
+              <div className="ob-field">
+                <label className="ob-label" htmlFor="ob-age">Tuổi</label>
+                <input
+                  id="ob-age"
+                  type="number"
+                  className="ob-input"
+                  placeholder="VD: 20"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                />
+              </div>
             </div>
 
             <div className="ob-row">
@@ -222,10 +280,17 @@ const OnboardingPage = () => {
             </div>
           </div>
 
+          {/* Error Barrier */}
+          {error && (
+            <div style={{ background: '#fee2e2', color: '#991b1b', padding: '1rem', borderRadius: '4px', marginBottom: '1.5rem', border: '1px solid #f87171' }}>
+              <strong>SYSTEM REJECTION:</strong> {error}
+            </div>
+          )}
+
           {/* CTA */}
-          <button type="submit" id="ob-submit-btn" className="ob-submit">
-            Lưu hồ sơ &amp; Tiếp tục
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          <button type="submit" id="ob-submit-btn" className="ob-submit" disabled={isSubmitting}>
+            {isSubmitting ? 'ĐANG ĐỒNG BỘ DỮ LIỆU...' : 'Lưu hồ sơ & Tiếp tục'}
+            {!isSubmitting && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>}
           </button>
         </form>
       </main>
