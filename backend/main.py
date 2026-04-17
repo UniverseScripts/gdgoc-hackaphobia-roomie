@@ -54,21 +54,17 @@ if OTEL_AVAILABLE:
     FastAPIInstrumentor.instrument_app(app)
 
 # 3. Include Routers
-app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
-app.include_router(onboarding.router, prefix="/api/onboarding", tags=["Onboarding"])
-app.include_router(test.router, prefix="/api/test", tags=["Test"])
-app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
-
-# Existing endpoints
-app.include_router(matches.router, prefix="/api/matches", tags=["Matches"])
-app.include_router(landlord.router, prefix="/api/landlord", tags=["Landlord"])
-app.include_router(market.router, prefix="/api/market", tags=["Market"])
-app.include_router(sponsor.router, prefix="/api/sponsor", tags=["Sponsor"])
-
-# Endpoints where the router internally defines the prefix (e.g. /reviews, /media, /admin)
-app.include_router(admin.router, prefix="/api")
-app.include_router(reviews.router, prefix="/api")
-app.include_router(media.router, prefix="/api")
+app.include_router(auth.router)
+app.include_router(onboarding.router)
+app.include_router(test.router)
+app.include_router(chat.router)
+app.include_router(matches.router)
+app.include_router(landlord.router)
+app.include_router(market.router)
+app.include_router(sponsor.router)
+app.include_router(admin.router)
+app.include_router(reviews.router)
+app.include_router(media.router)
 
 
 

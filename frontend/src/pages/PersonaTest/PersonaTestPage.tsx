@@ -89,7 +89,7 @@ export default function PersonaTestPage() {
     setError(null)
 
     try {
-      await authenticatedFetch('/api/test/submit', {
+      await authenticatedFetch('/test/submit', {
         method: 'POST',
         body: JSON.stringify({
           sleep_schedule: sleep,

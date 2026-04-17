@@ -176,7 +176,7 @@ export default function ListingsPage() {
           semantic_query: null // Inheriting default UI null assignment until mapped
         }
 
-        const res = await authenticatedFetch('/api/market/search', {
+        const res = await authenticatedFetch('/market/search', {
           method: 'POST',
           body: JSON.stringify(payload)
         })

@@ -13,7 +13,7 @@ export default function MatchesPage() {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const data = await authenticatedFetch('/api/matches/my-matches');
+        const data = await authenticatedFetch('/matches/my-matches');
         // The backend dictates the shape. Map exactly what exists.
         setMatches(data.matches || data || []);
       } catch (err: any) {

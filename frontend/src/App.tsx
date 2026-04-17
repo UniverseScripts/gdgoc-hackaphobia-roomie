@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import LandingPage from './pages/Landing/LandingPage'
 import LoginPage from './pages/Login/LoginPage'
-import OnboardingPage from './pages/PersonaTest/PersonaTestPage'
+import PersonaTestPage from './pages/PersonaTest/PersonaTestPage'
+import OnboardingPage from './pages/Onboarding/OnboardingPage'
 import ListingsPage from './pages/Listings/ListingsPage'
 import MatchesPage from './pages/Matches/MatchesPage'
 import ChatPage from './pages/Chat/ChatPage'
@@ -18,6 +19,7 @@ function App() {
         
         {/* Protected Routes */}
         <Route element={<ProtectedRoute allowedRoles={['customer', 'admin']} />}>
+          <Route path="/persona-test" element={<PersonaTestPage />} />
           <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/matches" element={<MatchesPage />} />
           <Route path="/chat" element={<ChatPage />} />

@@ -18,7 +18,7 @@ export default function ChatPage() {
     if (!user) return;
     const fetchInbox = async () => {
       try {
-        const res = await authenticatedFetch('/api/chat/conversations');
+        const res = await authenticatedFetch('/chat/conversations');
         const data = await res.json();
         setInbox(data || []);
       } catch (err: any) {
@@ -32,7 +32,7 @@ export default function ChatPage() {
     if (!user || !activeChat) return;
     const loadHistoryAndConnect = async () => {
       try {
-        const historyRes = await authenticatedFetch(`/api/chat/history/${activeChat.id}?limit=50`);
+        const historyRes = await authenticatedFetch(`/chat/history/${activeChat.id}?limit=50`);
         const messagesData = await historyRes.json();
         setMessages(messagesData || []);
 

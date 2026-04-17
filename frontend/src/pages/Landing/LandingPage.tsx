@@ -39,7 +39,7 @@ const LandingPage = () => {
   useEffect(() => {
     const fetchMarket = async () => {
       try {
-        const res = await authenticatedFetch('/api/market')
+        const res = await authenticatedFetch('/market')
         if (res.ok) {
           const data = await res.json()
           // Only slice first 4 for the landing section

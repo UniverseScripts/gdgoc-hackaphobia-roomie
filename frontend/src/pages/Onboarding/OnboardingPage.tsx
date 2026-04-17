@@ -51,7 +51,7 @@ const OnboardingPage = () => {
       }
 
       // 3. Transmit
-      await authenticatedFetch('/api/onboarding/profile', {
+      await authenticatedFetch('/onboarding/profile', {
         method: 'POST',
         body: JSON.stringify(basePayload)
       })
