@@ -80,7 +80,7 @@ export default function ChatPage() {
         const token = await user.getIdToken();
         
         // 1. Ingest the base backend URL (e.g., https://roomie-backend-xxxx.run.app)
-        const gatewayUrl = import.meta.env.VITE_API_GATEWAY_URL || "";
+        const gatewayUrl = import.meta.env.VITE_API_GATEWAY_URL || "https://roomie-backend-562503050786.us-central1.run.app";
         
         if (!gatewayUrl) {
            throw new Error("CRITICAL VOID: VITE_API_GATEWAY_URL is undefined.");

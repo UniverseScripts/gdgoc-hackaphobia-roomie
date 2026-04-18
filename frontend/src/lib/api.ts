@@ -1,6 +1,6 @@
 import { auth } from "./firebase";
 
-const BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || "";
+const BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || "https://roomie-backend-562503050786.us-central1.run.app";
 
 export const uploadImageToSecureBucket = async (file: File, token: string): Promise<string> => {
   // 1. Request signed URL from backend
