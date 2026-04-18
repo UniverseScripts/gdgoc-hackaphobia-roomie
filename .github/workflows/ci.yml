@@ -69,21 +69,10 @@ jobs:
           docker build -t us-central1-docker.pkg.dev/hackaphobia-roomie/roomie-repo/roomie-backend:${{ github.sha }} ./backend
           docker push us-central1-docker.pkg.dev/hackaphobia-roomie/roomie-repo/roomie-backend:${{ github.sha }}
 
-      - name: Isolate and Flatten Cryptographic Matrix
-        run: |
-          # Force jq to compact the raw JSON and map it to a temporary pipeline environment variable
-          FLAT_JSON=$(echo "$RAW_JSON" | jq -c .)
-          echo "FLAT_FIREBASE=$FLAT_JSON" >> $GITHUB_ENV
-        env:
-          # Safely extract the secret into the shell environment
-          RAW_JSON: ${{ secrets.FIREBASE_CONFIG }}
-
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: roomie-backend
           region: us-central1
-          image: us-central1-docker.pkg.dev/hackaphobia-roomie/roomie-repo/roomie-backend:${{ github.sha }}
-          env_vars: |
-            FIREBASE_CONFIG: ${{ env.FLAT_FIREBASE }}  
-          flags: '--allow-unauthenticated'
+          image: us-central1-docker.pkg.dev/hackaphobia-roomie/roomie-repo/roomie-backend:${{ github.sha }}  
+          flags: '--allow-unauthenticated --service-account=firebase-adminsdk-fbsvc@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com'
