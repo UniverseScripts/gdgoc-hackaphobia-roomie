@@ -1,6 +1,7 @@
 import Header from '../../components/Header'
 import './ChatPage.css'
 import { useEffect, useState, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import type { ChatMessage } from '../../types'
 import { useAuth } from '../../context/AuthContext'
 import { authenticatedFetch } from '../../lib/api'
@@ -14,12 +15,15 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const ws = useRef<WebSocket | null>(null);
 
+  const location = useLocation();
+  const targetPartnerId = location.state?.targetPartnerId;
+
+  // 1. Initial Load: Fetch Inbox
   useEffect(() => {
     if (!user) return;
     const fetchInbox = async () => {
       try {
-        const res = await authenticatedFetch('/chat/conversations');
-        const data = await res.json();
+        const data = await authenticatedFetch('/api/chat/conversations');
         setInbox(data || []);
       } catch (err: any) {
         setError(err.message);
@@ -28,12 +32,46 @@ export default function ChatPage() {
     fetchInbox();
   }, [user]);
 
+  // 2. Navigation Bootstrap: If redirected from Matches, ensure the partner is selected
+  useEffect(() => {
+    if (!user || !targetPartnerId) return;
+    
+    const existing = inbox.find(c => c.id === targetPartnerId);
+    if (existing) {
+      setActiveChat(existing);
+    } else if (inbox.length >= 0) { // Only bootstrap if we've at least tried to load the inbox
+      const bootstrap = async () => {
+        try {
+          const partnerData = await authenticatedFetch(`/api/chat/partner/${targetPartnerId}`);
+          const newChat = {
+            ...partnerData,
+            lastMessage: "Bắt đầu cuộc trò chuyện mới",
+            last_activity: new Date().toISOString(),
+            unread: 0,
+            online: false
+          };
+          
+          // Inject into local inbox so it appears in sidebar
+          setInbox(prev => {
+            if (prev.find(c => c.id === targetPartnerId)) return prev;
+            return [newChat, ...prev];
+          });
+          
+          setActiveChat(newChat);
+        } catch (err: any) {
+          console.error("Bootstrap failed", err);
+        }
+      };
+      bootstrap();
+    }
+  }, [user, inbox.length, targetPartnerId]);
+
+  // 3. Chat Logic: History & WebSocket
   useEffect(() => {
     if (!user || !activeChat) return;
     const loadHistoryAndConnect = async () => {
       try {
-        const historyRes = await authenticatedFetch(`/chat/history/${activeChat.id}?limit=50`);
-        const messagesData = await historyRes.json();
+        const messagesData = await authenticatedFetch(`/api/chat/history/${activeChat.id}?limit=50`);
         setMessages(messagesData || []);
 
         const token = await user.getIdToken();

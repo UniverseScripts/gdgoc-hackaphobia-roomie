@@ -2,15 +2,15 @@ import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from typing import Annotated, List, Dict
 from pydantic import BaseModel      
-from datetime import datetime
-from jose import jwt, JWTError
+from datetime import datetime, timezone
 from starlette import status
 from google.cloud.firestore_v1.base_query import FieldFilter, Or
 from google.cloud import firestore
 
 from services.chat_manager import manager
 from core.config import db
-from routers.auth import get_current_user, SECRET_KEY, ALGORITHM
+from routers.auth import get_current_user
+from firebase_admin import auth as firebase_auth
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -26,13 +26,13 @@ class MessageSchema(BaseModel):
     timestamp: datetime
 
 class ConversationSchema(BaseModel):
-    partner_id: str
-    partner_name: str
-    partner_image: str | None = None
-    last_message: str | None = None
-    last_message_time: datetime | None = None
-    unread_count: int = 0
-    is_online: bool = False
+    id: str # Partner UID
+    name: str
+    avatar: str | None = None
+    lastMessage: str | None = None
+    last_activity: datetime | None = None
+    unread: int = 0
+    online: bool = False
 
 @router.get("/conversations", response_model=List[ConversationSchema])
 async def get_conversations(current_user: Annotated[dict, Depends(get_current_user)]):
@@ -43,20 +43,25 @@ async def get_conversations(current_user: Annotated[dict, Depends(get_current_us
     filter_2 = FieldFilter("receiver_id", "==", current_uid)
     or_filter = Or(filters=[filter_1, filter_2])
     
-    messages_stream = db.collection('messages').where(filter=or_filter).order_by("timestamp").stream()
+    # Fetch messages without OrderBy to avoid requiring composite indexes
+    messages_stream = db.collection('messages').where(filter=or_filter).stream()
     
     conversations_map: Dict[str, dict] = {}
     
-    # Aggregate to find partners and latest messages
+    # Aggregate to find partners and latest messages in memory
     for msg_doc in messages_stream:
         msg = msg_doc.to_dict()
         partner_id = msg['receiver_id'] if msg['sender_id'] == current_uid else msg['sender_id']
         
-        # Because we ordered by timestamp, the last one we see will be the latest
-        conversations_map[partner_id] = {
-            "last_message": msg.get('content'),
-            "last_message_time": msg.get('timestamp')
-        }
+        msg_time = msg.get('timestamp')
+        existing_time = conversations_map.get(partner_id, {}).get('last_message_time')
+        
+        # Only update the map if this message is newer than what we've already found for this partner
+        if not existing_time or (msg_time and msg_time > existing_time):
+            conversations_map[partner_id] = {
+                "last_message": msg.get('content'),
+                "last_message_time": msg_time
+            }
 
     conversations = []
     
@@ -70,16 +75,16 @@ async def get_conversations(current_user: Annotated[dict, Depends(get_current_us
         is_online = partner_id in manager.active_connections
         
         conversations.append(ConversationSchema(
-            partner_id=partner_id,
-            partner_name=partner_data.get('username', 'Unknown'),
-            partner_image=None, 
-            last_message=data['last_message'],
-            last_message_time=data['last_message_time'],
-            unread_count=0, 
-            is_online=is_online
+            id=partner_id,
+            name=partner_data.get('username', 'Unknown'),
+            avatar=partner_data.get('avatar_url'), # Map avatar_url to avatar
+            lastMessage=data['last_message'],
+            last_activity=data['last_message_time'],
+            unread=0, 
+            online=is_online
         ))
     
-    conversations.sort(key=lambda x: x.last_message_time or datetime.min, reverse=True)
+    conversations.sort(key=lambda x: x.last_activity or datetime.min, reverse=True)
     return conversations
 
 @router.get("/history/{partner_id}", response_model=List[MessageSchema])
@@ -92,37 +97,55 @@ async def get_chat_history(
     current_uid = current_user['id']
     thread_id = get_thread_id(current_uid, partner_id)
     
+    # Fetch all messages for this thread to avoid composite index requirements
     query = db.collection("messages").where(
         filter=FieldFilter("thread_id", "==", thread_id)
-    ).order_by("timestamp", direction=firestore.Query.DESCENDING).limit(limit)
+    )
     
-    if start_after_timestamp:
-        # Note: Depending on the timestamp structure, it might need casting to datetime object.
-        query = query.start_after({
-            "timestamp": start_after_timestamp
-        })
-        
+    # Accumulate results and sort in Python
     results = [doc.to_dict() | {'id': doc.id} for doc in query.stream()]
-    # Reverse to maintain chronological order (oldest to newest) for frontend rendering
+    
+    # Sort descending by timestamp, then apply limit
+    results.sort(key=lambda x: x.get('timestamp') or datetime.min, reverse=True)
+    results = results[:limit]
+    
+    # Reverse to maintain chronological order for the frontend
     results.reverse()
     return results
+
+@router.get("/partner/{partner_id}")
+async def get_partner_info(partner_id: str, current_user: Annotated[dict, Depends(get_current_user)]):
+    """
+    Fetches minimal partner info for bootstrapping a chat window.
+    """
+    partner_doc = db.collection('users').document(partner_id).get()
+    if not partner_doc.exists:
+        raise HTTPException(status_code=404, detail="Partner not found")
+        
+    p_data = partner_doc.to_dict()
+    return {
+        "id": partner_id,
+        "name": p_data.get('username') or p_data.get('full_name') or "User",
+        "avatar": p_data.get('avatar_url')
+    }
 
 @router.websocket("/ws/{user_id}/{token}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        token_user_id = payload.get("id")
+        # Standard Firebase token verification
+        decoded_token = firebase_auth.verify_id_token(token)
+        token_uid = decoded_token.get("uid")
         
-        if token_user_id is None or token_user_id != user_id:
+        if token_uid is None or token_uid != user_id:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
-    except JWTError:
+    except Exception as e:
+        print(f"WebSocket Auth Failed: {e}")
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
     await manager.connect(websocket, user_id)
     
-
     try:
         while True:
             data = await websocket.receive_text()
@@ -150,6 +173,11 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str):
             await manager.send_personal_message(
                 json.dumps({"sender": user_id, "msg": content}),
                 receiver_id
+            )
+            # Echo back to sender for other tabs and confirmation
+            await manager.send_personal_message(
+                json.dumps({"sender": user_id, "msg": content}),
+                user_id
             )
 
     except WebSocketDisconnect:

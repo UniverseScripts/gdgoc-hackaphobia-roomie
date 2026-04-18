@@ -4,16 +4,16 @@ from fastapi import WebSocket
 class ConnectionManager:
     def __init__(self):
         # Maps user_id -> List of active WebSockets (User might have 2 tabs open)
-        self.active_connections: Dict[int, List[WebSocket]] = {}
+        self.active_connections: Dict[str, List[WebSocket]] = {}
 
-    async def connect(self, websocket: WebSocket, user_id: int):
+    async def connect(self, websocket: WebSocket, user_id: str):
         """Accepts the connection and stores it."""
         await websocket.accept()
         if user_id not in self.active_connections:
             self.active_connections[user_id] = []
         self.active_connections[user_id].append(websocket)
 
-    def disconnect(self, websocket: WebSocket, user_id: int):
+    def disconnect(self, websocket: WebSocket, user_id: str):
         """Removes the connection when user closes tab."""
         if user_id in self.active_connections:
             if websocket in self.active_connections[user_id]:
@@ -21,7 +21,7 @@ class ConnectionManager:
             if not self.active_connections[user_id]:
                 del self.active_connections[user_id]
 
-    async def send_personal_message(self, message: str, user_id: int):
+    async def send_personal_message(self, message: str, user_id: str):
         """Sends a message ONLY to the specific user."""
         if user_id in self.active_connections:
             for connection in self.active_connections[user_id]:
