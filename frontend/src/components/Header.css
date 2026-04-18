@@ -125,6 +125,20 @@
   font-weight: 500;
 }
 
+.header__avatar-link {
+  display: inline-flex;
+  border-radius: 50%;
+  transition: all 0.18s ease;
+}
+
+.header__avatar-link:hover {
+  transform: scale(1.07);
+  box-shadow: 0 0 0 3px rgba(246, 157, 24, 0.35);
+  border-radius: 50%;
+  outline: 2.5px solid var(--color-cta);
+  outline-offset: 2px;
+}
+
 .header__user-avatar {
   width: 40px;
   height: 40px;

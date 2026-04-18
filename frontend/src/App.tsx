@@ -6,6 +6,7 @@ import OnboardingPage from './pages/Onboarding/OnboardingPage'
 import ListingsPage from './pages/Listings/ListingsPage'
 import MatchesPage from './pages/Matches/MatchesPage'
 import ChatPage from './pages/Chat/ChatPage'
+import SettingsPage from './pages/Settings/SettingsPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
           <Route path="/persona-test" element={<PersonaTestPage />} />
           <Route path="/matches" element={<MatchesPage />} />
           <Route path="/chat" element={<ChatPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
