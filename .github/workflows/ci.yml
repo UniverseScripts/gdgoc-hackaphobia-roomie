@@ -26,6 +26,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
+      - name: Verify Environment Ingestion Pipeline
+        env:
+          TEST_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+        run: |
+          if [ -z "$TEST_KEY" ]; then
+            echo "CRITICAL FAILURE: The secret vault is returning a void. The runner cannot see the secret."
+            exit 1
+          else
+            echo "SUCCESS: The cryptographic key has breached the pipeline."
+          fi
+
       - name: Install Frontend Dependencies
         working-directory: ./frontend
         run: npm install
