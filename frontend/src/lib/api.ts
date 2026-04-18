@@ -1,8 +1,10 @@
 import { auth } from "./firebase";
 
+const BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || "";
+
 export const uploadImageToSecureBucket = async (file: File, token: string): Promise<string> => {
   // 1. Request signed URL from backend
-  const res = await fetch(`/api/media/upload-url?content_type=${encodeURIComponent(file.type)}`, {
+  const res = await fetch(`${BASE_URL}/api/media/upload-url?content_type=${encodeURIComponent(file.type)}`, {
     headers: { 'Authorization': `Bearer ${token}` }
   });
   
@@ -46,7 +48,10 @@ export async function authenticatedFetch(endpoint: string, options: RequestInit 
   };
 
   // 3. Execute the network request
-  const response = await fetch(endpoint, {
+  // Use relative endpoint if BASE_URL is empty, else combine them
+  const url = endpoint.startsWith('http') ? endpoint : `${BASE_URL}${endpoint}`;
+  
+  const response = await fetch(url, {
     ...options,
     headers,
   });

@@ -39,6 +39,10 @@ jobs:
 
       - name: Install Frontend Dependencies
         working-directory: ./frontend
+        run: npm install
+
+      - name: Build Vite SPA Sandbox
+        working-directory: ./frontend
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
@@ -47,11 +51,6 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_API_GATEWAY_URL: ${{ secrets.VITE_API_GATEWAY_URL }}
-        run: npm install
-
-      - name: Build Vite SPA Sandbox
-        working-directory: ./frontend
-        env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: npm run build
 
