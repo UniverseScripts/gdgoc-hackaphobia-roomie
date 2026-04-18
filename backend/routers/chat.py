@@ -165,20 +165,22 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str):
                     "timestamp": datetime.now(timezone.utc),
                     "thread_id": get_thread_id(user_id, receiver_id)
                 }
-                db.collection('messages').add(new_msg)
+                # Capture the return value to get the document ID
+                _, doc_ref = db.collection('messages').add(new_msg)
+                new_msg_id = doc_ref.id
             except Exception as db_error:
                 print(f"Database error: {db_error}")
                 continue
 
-            await manager.send_personal_message(
-                json.dumps({"sender": user_id, "msg": content}),
-                receiver_id
-            )
+            msg_payload = json.dumps({
+                "id": new_msg_id,
+                "sender": user_id, 
+                "msg": content
+            })
+
+            await manager.send_personal_message(msg_payload, receiver_id)
             # Echo back to sender for other tabs and confirmation
-            await manager.send_personal_message(
-                json.dumps({"sender": user_id, "msg": content}),
-                user_id
-            )
+            await manager.send_personal_message(msg_payload, user_id)
 
     except WebSocketDisconnect:
         manager.disconnect(websocket, user_id)

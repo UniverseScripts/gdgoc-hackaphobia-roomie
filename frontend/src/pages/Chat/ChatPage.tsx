@@ -69,35 +69,54 @@ export default function ChatPage() {
   // 3. Chat Logic: History & WebSocket
   useEffect(() => {
     if (!user || !activeChat) return;
+    let active = true;
+
     const loadHistoryAndConnect = async () => {
       try {
         const messagesData = await authenticatedFetch(`/api/chat/history/${activeChat.id}?limit=50`);
+        if (!active) return;
         setMessages(messagesData || []);
 
         const token = await user.getIdToken();
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        ws.current = new WebSocket(`${protocol}//${window.location.host}/api/chat/ws/${user.uid}/${token}`);
+        const socket = new WebSocket(`${protocol}//${window.location.host}/api/chat/ws/${user.uid}/${token}`);
         
-        ws.current.onmessage = (event) => {
+        socket.onmessage = (event) => {
+          if (!active) return;
           const incoming = JSON.parse(event.data);
-          // incoming format: {"sender": user_id, "msg": content}
+          // incoming format: {"id": message_id, "sender": sender_id, "msg": content}
+          
           if (incoming.sender === activeChat.id || incoming.sender === user.uid) {
-            setMessages(prev => [...prev, {
-              id: Date.now().toString(),
-              sender_id: incoming.sender,
-              receiver_id: incoming.sender === user.uid ? activeChat.id : user.uid,
-              content: incoming.msg,
-              timestamp: new Date().toISOString()
-            } as any]);
+            setMessages(prev => {
+              // De-duplicate check
+              if (prev.some(m => m.id === incoming.id)) return prev;
+
+              return [...prev, {
+                id: incoming.id,
+                sender_id: incoming.sender,
+                receiver_id: incoming.sender === user.uid ? activeChat.id : user.uid,
+                content: incoming.msg,
+                timestamp: new Date().toISOString()
+              } as any];
+            });
           }
         };
+
+        ws.current = socket;
       } catch (err: any) {
-        setError(err.message);
+        if (active) setError(err.message);
       }
     };
+
     loadHistoryAndConnect();
-    return () => ws.current?.close();
-  }, [user, activeChat]);
+    return () => {
+      active = false;
+      if (ws.current) {
+        ws.current.close();
+        ws.current = null;
+      }
+    };
+  }, [user, activeChat?.id]);
 
   const handleSend = () => {
     if (!message.trim() || !user || !activeChat || !ws.current) return;
