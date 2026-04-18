@@ -28,13 +28,28 @@ jobs:
 
       - name: Verify Environment Ingestion Pipeline
         env:
-          TEST_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_API_GATEWAY_URL: ${{ secrets.VITE_API_GATEWAY_URL }}
         run: |
-          if [ -z "$TEST_KEY" ]; then
-            echo "CRITICAL FAILURE: The secret vault is returning a void. The runner cannot see the secret."
+          MISSING=()
+          [ -z "$VITE_FIREBASE_API_KEY" ] && MISSING+=("VITE_FIREBASE_API_KEY")
+          [ -z "$VITE_FIREBASE_AUTH_DOMAIN" ] && MISSING+=("VITE_FIREBASE_AUTH_DOMAIN")
+          [ -z "$VITE_FIREBASE_PROJECT_ID" ] && MISSING+=("VITE_FIREBASE_PROJECT_ID")
+          [ -z "$VITE_FIREBASE_STORAGE_BUCKET" ] && MISSING+=("VITE_FIREBASE_STORAGE_BUCKET")
+          [ -z "$VITE_FIREBASE_MESSAGING_SENDER_ID" ] && MISSING+=("VITE_FIREBASE_MESSAGING_SENDER_ID")
+          [ -z "$VITE_FIREBASE_APP_ID" ] && MISSING+=("VITE_FIREBASE_APP_ID")
+          [ -z "$VITE_API_GATEWAY_URL" ] && MISSING+=("VITE_API_GATEWAY_URL")
+          
+          if [ ${#MISSING[@]} -ne 0 ]; then
+            echo "CRITICAL FAILURE: The following secrets are missing from the vault: ${MISSING[*]}"
             exit 1
           else
-            echo "SUCCESS: The cryptographic key has breached the pipeline."
+            echo "SUCCESS: All cryptographic keys and gateway URLs have successfully breached the pipeline."
           fi
 
       - name: Install Frontend Dependencies
