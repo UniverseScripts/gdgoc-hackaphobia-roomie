@@ -75,4 +75,6 @@ jobs:
           service: roomie-backend
           region: us-central1
           image: us-central1-docker.pkg.dev/hackaphobia-roomie/roomie-repo/roomie-backend:${{ github.sha }}
+          env_vars: |
+            FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}  
           flags: '--allow-unauthenticated'
