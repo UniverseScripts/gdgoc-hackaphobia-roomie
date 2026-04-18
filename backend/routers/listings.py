@@ -19,6 +19,7 @@ class ListingSchema(BaseModel):
     price: int
     size: int
     location: str
+    coordinates: List[float]
     images: List[str]
     fitScore: int
     host: HostSchema
@@ -76,12 +77,18 @@ async def get_listing_recommendations(authorization: Optional[str] = None):
         owner_data = owner_map.get(owner_id, {})
         owner_name = owner_data.get('full_name') or owner_data.get('username') or 'Unknown'
 
+        # GeoPoint Synchronization: Convert Firestore objects to standard List[float]
+        coords = raw_dict.get('coordinates', [10.772, 106.664])
+        if hasattr(coords, 'latitude') and hasattr(coords, 'longitude'):
+            coords = [coords.latitude, coords.longitude]
+
         scored_listings.append({
             "id": listing_model.id,
             "title": listing_model.title,
             "price": int(listing_model.price),
             "size": int(listing_model.size),
             "location": listing_model.district,
+            "coordinates": coords,
             "images": listing_model.images,
             "fitScore": score,
             "host": {

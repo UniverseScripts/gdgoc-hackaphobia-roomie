@@ -10,3 +10,7 @@ hackaphobia-roomie-7288262340d8.json
 scripts/
 backend/dummy.json
 environment_variables_checklist.md
+backend/mock_listings.py
+backend/validate_staging.py
+backend/validate_ratings.py
+backend/validate_media.py

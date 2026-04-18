@@ -5,6 +5,7 @@ import Header from '../../components/Header'
 import Footer from '../../components/Footer'
 import './LandingPage.css'
 import logoExtended from '../../assets/logo_extended_stroke.png'
+import type { Listing } from '../../types'
 
 /* ── Data ── */
 const FEATURED_AREAS = [
@@ -34,7 +35,7 @@ const LandingPage = () => {
   const [searchMode, setSearchMode] = useState<SearchMode>('room')
   const [location, setLocation] = useState('')
   const [budget, setBudget] = useState('')
-  const [verifiedListings, setVerifiedListings] = useState<any[]>([])
+  const [verifiedListings, setVerifiedListings] = useState<Listing[]>([])
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -198,7 +199,7 @@ const LandingPage = () => {
                     <p className="listing-card__title">{item.title}</p>
                     <p className="listing-card__location">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                      {item.district}
+                      {item.location}
                     </p>
                   </div>
                 </article>
