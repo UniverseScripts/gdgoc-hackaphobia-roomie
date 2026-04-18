@@ -78,17 +78,26 @@ export default function ChatPage() {
         setMessages(messagesData || []);
 
         const token = await user.getIdToken();
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const socket = new WebSocket(`${protocol}//${window.location.host}/api/chat/ws/${user.uid}/${token}`);
+        
+        // 1. Ingest the base backend URL (e.g., https://roomie-backend-xxxx.run.app)
+        const gatewayUrl = import.meta.env.VITE_API_GATEWAY_URL || "";
+        
+        if (!gatewayUrl) {
+           throw new Error("CRITICAL VOID: VITE_API_GATEWAY_URL is undefined.");
+        }
+
+        // 2. Mathematically transform the protocol from HTTP(S) to WS(S)
+        const wsBaseUrl = gatewayUrl.replace(/^http/, 'ws');
+        
+        // 3. Establish the secure persistent connection directly to the Cloud Run container
+        const socket = new WebSocket(`${wsBaseUrl}/api/chat/ws/${user.uid}/${token}`);
         
         socket.onmessage = (event) => {
           if (!active) return;
           const incoming = JSON.parse(event.data);
-          // incoming format: {"id": message_id, "sender": sender_id, "msg": content}
           
           if (incoming.sender === activeChat.id || incoming.sender === user.uid) {
             setMessages(prev => {
-              // De-duplicate check
               if (prev.some(m => m.id === incoming.id)) return prev;
 
               return [...prev, {
