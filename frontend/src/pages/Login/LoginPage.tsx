@@ -1,51 +1,105 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import './LoginPage.css'
 
+// ── Firebase error code → user-friendly Vietnamese message (Bug 4 fix) ──
+const FIREBASE_ERROR_MAP: Record<string, string> = {
+  'auth/user-not-found':                          'Email không tồn tại trong hệ thống.',
+  'auth/wrong-password':                          'Mật khẩu không chính xác.',
+  'auth/invalid-credential':                      'Email hoặc mật khẩu không đúng.',
+  'auth/email-already-in-use':                    'Email này đã được đăng ký.',
+  'auth/weak-password':                           'Mật khẩu phải có ít nhất 6 ký tự.',
+  'auth/invalid-email':                           'Địa chỉ email không hợp lệ.',
+  'auth/too-many-requests':                       'Quá nhiều lần thử. Vui lòng thử lại sau.',
+  'auth/operation-not-allowed':                   'Đăng ký bằng Email chưa được bật. Vui lòng liên hệ quản trị viên.',
+  'auth/account-exists-with-different-credential':'Email đã đăng ký qua phương thức khác. Vui lòng đăng nhập bằng Google.',
+  'auth/network-request-failed':                  'Lỗi kết nối mạng. Vui lòng thử lại.',
+  'auth/user-disabled':                           'Tài khoản này đã bị vô hiệu hoá.',
+  'auth/requires-recent-login':                   'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+  'auth/missing-password':                        'Vui lòng nhập mật khẩu.',
+  'auth/missing-email':                           'Vui lòng nhập địa chỉ email.',
+}
+
+function getFirebaseErrorMessage(code: string): string {
+  return FIREBASE_ERROR_MAP[code] || 'Đăng nhập thất bại. Vui lòng thử lại.'
+}
+
 const LoginPage = () => {
-  const [email, setEmail]       = useState('')
-  const [password, setPassword] = useState('')
-  const [showPass, setShowPass] = useState(false)
-  const [isSignup, setIsSignup] = useState(false) // Toggle between Login/Signup
-  const [error, setError] = useState<string | null>(null)
+  const [email, setEmail]             = useState('')
+  const [password, setPassword]       = useState('')
+  const [showPass, setShowPass]       = useState(false)
+  const [error, setError]             = useState<string | null>(null)
+  const [isRedirecting, setIsRedirecting] = useState(false)
 
   const navigate = useNavigate()
-  const { loginWithGoogle, loginWithFacebook, loginWithEmail, signupWithEmail } = useAuth()
+  const location = useLocation()
+  const isSignup = location.pathname === '/signup'
+  const { user, userProfile, redirectError, loginWithGoogle, loginWithFacebook, loginWithEmail, signupWithEmail } = useAuth()
 
+  // Bug 2 fix: Route based on actual profile_completed state, not blindly to /onboarding
+  useEffect(() => {
+    if (user && userProfile !== null) {
+      navigate(userProfile.profile_completed ? '/' : '/onboarding', { replace: true })
+    }
+  }, [user, userProfile, navigate])
+
+  // Surface redirect errors (e.g. Facebook email conflict) from AuthContext
+  useEffect(() => {
+    if (redirectError) setError(redirectError)
+  }, [redirectError])
+
+  // Bug 1 fix: signInWithRedirect — browser navigates away, no navigate() call needed
   const handleGoogleLogin = async () => {
     try {
+      setError(null)
+      setIsRedirecting(true)
       await loginWithGoogle()
-      navigate('/onboarding')
-    } catch (error) {
-      console.error(error)
+      // Execution stops here — browser redirects to Google
+    } catch (err: any) {
+      setIsRedirecting(false)
+      setError(getFirebaseErrorMessage(err.code))
     }
   }
 
   const handleFacebookLogin = async () => {
     try {
+      setError(null)
+      setIsRedirecting(true)
       await loginWithFacebook()
-      navigate('/onboarding')
-    } catch (error) {
-      console.error(error)
+      // Execution stops here — browser redirects to Facebook
+    } catch (err: any) {
+      setIsRedirecting(false)
+      setError(getFirebaseErrorMessage(err.code))
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    
+
     try {
       if (isSignup) {
         await signupWithEmail(email, password)
       } else {
         await loginWithEmail(email, password)
       }
-      // Firebase Identity established. Route to Profile Matrix.
-      navigate('/onboarding')
+      // onAuthStateChanged fires → useEffect above handles navigation (Bug 2 fix)
     } catch (err: any) {
-      setError(err.message || "Authentication failed.")
+      setError(getFirebaseErrorMessage(err.code))
     }
+  }
+
+  // Secondary guard: if user is already authenticated (e.g. came from redirect),
+  // render nothing while the navigation useEffect fires on the next tick
+  if (user) return null
+
+  if (isRedirecting) {
+    return (
+      <div className="login-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#6b7280', fontSize: '1rem' }}>Đang chuyển hướng đến trang đăng nhập...</p>
+      </div>
+    )
   }
 
   return (
@@ -169,11 +223,11 @@ const LoginPage = () => {
 
           <p className="login-register-cta">
             {isSignup ? 'Đã có tài khoản? ' : 'Chưa có tài khoản? '}
-            <button 
-              type="button" 
-              onClick={() => { setIsSignup(!isSignup); setError(null); }} 
-              className="login-register-link" 
-              style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer', textDecoration: 'underline' }} 
+            <button
+              type="button"
+              onClick={() => { setError(null); navigate(isSignup ? '/login' : '/signup') }}
+              className="login-register-link"
+              style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer', textDecoration: 'underline' }}
               id="signup-link"
             >
               {isSignup ? 'Đăng nhập ngay' : 'Đăng ký ngay'}

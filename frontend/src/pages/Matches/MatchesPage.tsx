@@ -13,17 +13,27 @@ export default function MatchesPage() {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const data = await authenticatedFetch('/matches/my-matches');
-        // The backend dictates the shape. Map exactly what exists.
+        const data = await authenticatedFetch('/api/matches/my-matches');
         setMatches(data.matches || data || []);
       } catch (err: any) {
+        // Backend enforcement: 403 with PERSONALITY_TEST_REQUIRED detail redirects to persona test
+        // Silence the error if it's the expected test-requirement redirect
+        const isTestRequired =
+          err.message === 'PERSONALITY_TEST_REQUIRED' ||
+          err.message?.includes('PERSONALITY_TEST_REQUIRED');
+          
+        if (isTestRequired) {
+          navigate('/persona-test', { replace: true });
+          return;
+        }
+        
         setError(err.message || 'Infrastructure Failure: Match Engine inaccessible.');
       } finally {
         setLoading(false);
       }
     };
     fetchMatches();
-  }, []);
+  }, [navigate]);
 
   if (loading) {
     return (

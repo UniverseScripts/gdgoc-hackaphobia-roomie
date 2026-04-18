@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
-from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Optional, Annotated
 from pydantic import BaseModel
 
 from core.config import db
 from routers.auth import get_current_user
+from services.auth import verify_customer_claim
 
 from services.matching import (
     calculate_cosine_similarity, 
@@ -22,21 +23,35 @@ class MatchProfileSchema(BaseModel):
     major: Optional[str] = None
     district: Optional[str] = "Ho Chi Minh City" 
     match_score: int
-    avatar_url: str 
+    avatar_url: str
 
 @router.get("/my-matches", response_model=List[MatchProfileSchema])
-async def get_my_matches(current_user: dict = Depends(get_current_user)):
-    my_vector_doc = db.collection('user_vectors').document(current_user['id']).get()
+async def get_my_matches(current_user: Annotated[dict, Depends(get_current_user)]):
+    # Role Enforcement: Ensure only customers access the match engine
+    if current_user.get("role") != "customer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Insufficient demand-side privileges"
+        )
+
+    uid = current_user['id']
+    my_vector_doc = db.collection('test_vectors').document(uid).get()
     
     if not my_vector_doc.exists:
-        return []
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="PERSONALITY_TEST_REQUIRED"
+        )
         
     my_vector_data = my_vector_doc.to_dict().get('vector_data_embeddings')
     if not my_vector_data:
-        return []
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="PERSONALITY_TEST_REQUIRED"
+        )
 
     # get_candidate_vectors needs to be rewritten in matching.py to return lists of dicts from Firestore
-    candidates = await get_candidate_vectors(db, current_user['id'])
+    candidates = get_candidate_vectors(db, current_user['id'])
     
     matches = []
     
@@ -52,7 +67,8 @@ async def get_my_matches(current_user: dict = Depends(get_current_user)):
         if candidate_vector.get('responses'):
              district = candidate_vector['responses'].get('district', district)
 
-        avatar = "https://t4.ftcdn.net/jpg/00/64/67/27/360_F_64672736_U5kpdGs9keUll8CRQ3p3YaEv2M6qkVY5.jpg"
+        images = candidate_user.get('images', [])
+        avatar = images[0] if images else "https://t4.ftcdn.net/jpg/00/64/67/27/360_F_64672736_U5kpdGs9keUll8CRQ3p3YaEv2M6qkVY5.jpg"
 
         matches.append({
             "user_id": candidate_user['id'],

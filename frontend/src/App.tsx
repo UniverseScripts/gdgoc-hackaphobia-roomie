@@ -17,10 +17,14 @@ function App() {
         <Route path="/signup" element={<LoginPage />} />
         <Route path="/listings" element={<ListingsPage />} />
         
-        {/* Protected Routes */}
+        {/* Onboarding — auth required, no role restriction (new users have no role yet) */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/onboarding" element={<OnboardingPage />} />
+        </Route>
+
+        {/* Protected Routes — customer & admin only */}
         <Route element={<ProtectedRoute allowedRoles={['customer', 'admin']} />}>
           <Route path="/persona-test" element={<PersonaTestPage />} />
-          <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/matches" element={<MatchesPage />} />
           <Route path="/chat" element={<ChatPage />} />
         </Route>

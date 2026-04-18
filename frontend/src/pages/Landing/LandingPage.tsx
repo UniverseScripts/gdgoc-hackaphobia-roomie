@@ -39,12 +39,8 @@ const LandingPage = () => {
   useEffect(() => {
     const fetchMarket = async () => {
       try {
-        const res = await authenticatedFetch('/market')
-        if (res.ok) {
-          const data = await res.json()
-          // Only slice first 4 for the landing section
-          setVerifiedListings((data.data || []).slice(0, 4))
-        }
+        const data = await authenticatedFetch('/api/listings/recommendations')
+        setVerifiedListings((data || []).slice(0, 4))
       } catch (err) {
         console.error("Failed to fetch genesis market data:", err)
       }

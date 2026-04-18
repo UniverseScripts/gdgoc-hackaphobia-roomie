@@ -11,7 +11,8 @@ router = APIRouter(prefix="/test", tags=["Test"])
 
 @router.get("/status")
 async def check_test_status(user: user_dependencies):
-    vector_doc = db.collection('user_vectors').document(user['id']).get()
+    uid = user['id']
+    vector_doc = db.collection('test_vectors').document(uid).get()
 
     if vector_doc.exists and vector_doc.to_dict().get('is_completed') is True:
         return {"completed": True}
@@ -20,7 +21,8 @@ async def check_test_status(user: user_dependencies):
 
 @router.post("/submit")
 async def submit_assessment(submission: TestSubmission, user: user_dependencies):
-    user_vector_ref = db.collection('user_vectors').document(user['id'])
+    uid = user['id']
+    user_vector_ref = db.collection('test_vectors').document(uid)
     vector_doc = user_vector_ref.get()
 
     if vector_doc.exists and vector_doc.to_dict().get('is_completed') is True:

@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { authenticatedFetch } from '../../lib/api'
+import { auth } from '../../lib/firebase'
+import { useAuth } from '../../context/AuthContext'
 import './OnboardingPage.css'
 
 // Static data for personality tests has been eradicated to match the User schema.
 
 const OnboardingPage = () => {
   /* ── State ── */
+  const { refetchProfile } = useAuth()
   const [role,        setRole]        = useState<'customer' | 'landlord'>('customer')
   const [username,    setUsername]    = useState('')
   const [fullName,    setFullName]    = useState('')
@@ -17,9 +20,26 @@ const OnboardingPage = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError]         = useState<string | null>(null)
+  const [statusLoading, setStatusLoading] = useState(true)
 
   const navigate = useNavigate()
 
+  /* ── Status Check: Redirect if already completed ── */
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const data = await authenticatedFetch('api/onboarding/status')
+        if (data.profile_completed) {
+          navigate('/', { replace: true })
+        }
+      } catch {
+        // If the check fails (e.g. unauthenticated), let the form render
+      } finally {
+        setStatusLoading(false)
+      }
+    }
+    checkStatus()
+  }, [navigate])
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,18 +71,33 @@ const OnboardingPage = () => {
       }
 
       // 3. Transmit
-      await authenticatedFetch('/onboarding/profile', {
+      await authenticatedFetch('api/onboarding/profile', {
         method: 'POST',
         body: JSON.stringify(basePayload)
       })
 
-      navigate('/listings') 
+      // 4. Backend stamped the 'role' custom claim — force-refresh the JWT
+      //    so all subsequent authenticatedFetch calls carry the updated claim.
+      if (auth.currentUser) {
+        await auth.currentUser.getIdToken(true)
+        await refetchProfile() // Synchronization: ensure the global context is aware of the new profile state
+      }
+
+      navigate('/')
 
     } catch (err: any) {
       setError(err.message || 'Infrastructure Failure: Payload rejected by the gatekeeper.')
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (statusLoading) {
+    return (
+      <div className="onboarding" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <p style={{ color: 'var(--color-text-muted, #888)', fontSize: '1rem' }}>Đang kiểm tra trạng thái...</p>
+      </div>
+    )
   }
 
   return (
@@ -75,13 +110,13 @@ const OnboardingPage = () => {
             <img src="/Logo.png" alt="RooMie" />
           </Link>
           <div className="ob-header__step">
-            <span className="ob-header__step-num">BƯỚC 1 CỦA 3</span>
+            <span className="ob-header__step-num">BƯỚC 1 CỦA 1</span>
             <span className="ob-header__step-desc">Hồ Sơ cá nhân</span>
           </div>
         </div>
         {/* Progress Bar */}
-        <div className="ob-progress" role="progressbar" aria-valuenow={33} aria-valuemin={0} aria-valuemax={100}>
-          <div className="ob-progress__fill" style={{ width: '33%' }} />
+        <div className="ob-progress" role="progressbar" aria-valuenow={100} aria-valuemin={0} aria-valuemax={100}>
+          <div className="ob-progress__fill" style={{ width: '100%' }} />
         </div>
       </header>
 

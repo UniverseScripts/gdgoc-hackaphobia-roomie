@@ -21,34 +21,37 @@ def calculate_cosine_similarity(vector1: list, vector2: list) -> float:
 
 def get_user_vector(db, user_id: str) -> Optional[dict]:
     """Fetch a user's vector from database."""
-    doc = db.collection('user_vectors').document(user_id).get()
+    doc = db.collection('test_vectors').document(user_id).get()
     return doc.to_dict() if doc.exists else None
 
 
 def get_candidate_vectors(db, user_id: str) -> List[tuple[dict, dict]]:
     """Fetch all completed candidate vectors excluding the current user."""
-    vector_docs = db.collection('user_vectors').where('is_completed', '==', True).stream()
+    vector_docs = db.collection('test_vectors').where('is_completed', '==', True).stream()
     
     vector_list = []
     user_refs = []
     
     for doc in vector_docs:
         if doc.id == user_id:
-             continue
-        vector_list.append(doc.to_dict())
+            continue
+        vec = doc.to_dict()
+        vec['_doc_id'] = doc.id  # Preserve doc ID for safe dict-keyed lookup
+        vector_list.append(vec)
         user_refs.append(db.collection('users').document(doc.id))
         
     if not user_refs:
         return []
         
-    # Python Firestore SDK get_all expects either varargs or an iterable
-    # Expanding with *user_refs ensures compatibility.
+    # get_all does NOT guarantee order — use a dict keyed by document ID (Bug 2 fix)
     user_snapshots = db.get_all(user_refs)
+    user_map = {snap.id: snap for snap in user_snapshots if snap.exists}
     
     candidates = []
-    # In Python, get_all sometimes returns a generator, so zip is perfectly fine.
-    for vec, user_snap in zip(vector_list, user_snapshots):
-        if user_snap.exists:
+    for vec in vector_list:
+        doc_id = vec.get('_doc_id')
+        if doc_id in user_map:
+            user_snap = user_map[doc_id]
             user_dict = user_snap.to_dict()
             user_dict['id'] = user_snap.id
             candidates.append((vec, user_dict))
@@ -59,47 +62,3 @@ def get_candidate_vectors(db, user_id: str) -> List[tuple[dict, dict]]:
 def calculate_match_score(similarity: float) -> int:
     """Convert similarity score to percentage."""
     return int(max(0, similarity) * 100)
-
-
-def find_top_matches(
-    current_user_id: str,
-    db,
-    limit: int = 10
-) -> List[Dict[str, int | str]]:
-    """Find top compatible matches for a user based on vector similarity."""
-    # Get current user's vector
-    user_vector = get_user_vector(db, current_user_id)
-
-    if not user_vector or not user_vector.get('vector_data_embeddings'):
-        return []
-
-    # Get all candidate vectors
-    candidates = get_candidate_vectors(db, current_user_id)
-
-    # Calculate similarity scores
-    matches = []
-    for vec_dict, user_dict in candidates:
-        if not vec_dict.get('vector_data_embeddings'):
-            continue
-
-        similarity = calculate_cosine_similarity(
-            user_vector['vector_data_embeddings'], vec_dict['vector_data_embeddings'])
-            
-        # SYNTHETIC MONETIZATION VECTOR (ALGORITHMIC BIAS)
-        # Artificially inflate the compatibility math for "Premium" profiles
-        is_premium_profile = user_dict.get("is_premium", False)
-        if is_premium_profile:
-            similarity = min(1.0, similarity * 1.15) # 15% Artificial Boost for paying users
-
-        score = calculate_match_score(similarity)
-
-        matches.append({
-            "user_id": user_dict['id'],
-            "username": user_dict.get('username', 'Unknown'),
-            "match_score": score,
-            "is_promoted": is_premium_profile
-        })
-
-    # Sort by score and return top matches
-    matches.sort(key=lambda x: x["match_score"], reverse=True)
-    return matches[:limit]

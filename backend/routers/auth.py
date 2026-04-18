@@ -8,11 +8,22 @@ from services.auth import verify_firebase_token, SECRET_KEY, ALGORITHM
 async def get_current_user(token: dict = Depends(verify_firebase_token)):
     uid = token.get("uid")
     user_doc = db.collection('users').document(uid).get()
-    if not user_doc.exists:
-        return {"id": uid, "email": token.get("email"), "role": token.get("role")}
-    user_data = user_doc.to_dict()
-    user_data["id"] = uid
-    return user_data
+    
+    # Base user object from token
+    user_info = {
+        "id": uid,
+        "email": token.get("email"),
+        "role": token.get("role")
+    }
+
+    if user_doc.exists:
+        firestore_data = user_doc.to_dict()
+        # Merge Firestore data, allowing it to override token role
+        # (Firestore is the source of truth for the profile)
+        user_info.update(firestore_data)
+        user_info["id"] = uid # Ensure id is always set correctly
+        
+    return user_info
 
 router = APIRouter(prefix="/auth", tags=['auth'])
 

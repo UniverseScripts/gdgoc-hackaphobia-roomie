@@ -12,7 +12,8 @@ from routers import (
     chat,          
     onboarding,    
     test,          
-    auth           
+    auth,          
+    listings
 )
 
 # OpenTelemetry imports
@@ -54,18 +55,18 @@ if OTEL_AVAILABLE:
     FastAPIInstrumentor.instrument_app(app)
 
 # 3. Include Routers
-app.include_router(auth.router)
-app.include_router(onboarding.router)
-app.include_router(test.router)
-app.include_router(chat.router)
-app.include_router(matches.router)
-app.include_router(landlord.router)
-app.include_router(market.router)
-app.include_router(sponsor.router)
-app.include_router(admin.router)
-app.include_router(reviews.router)
-app.include_router(media.router)
-
+app.include_router(auth.router, prefix="/api")
+app.include_router(listings.router, prefix="/api")
+app.include_router(onboarding.router, prefix="/api")
+app.include_router(test.router, prefix="/api")
+app.include_router(chat.router, prefix="/api")
+app.include_router(matches.router, prefix="/api")
+app.include_router(landlord.router, prefix="/api")
+app.include_router(market.router, prefix="/api")
+app.include_router(sponsor.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
+app.include_router(reviews.router, prefix="/api")
+app.include_router(media.router, prefix="/api")
 
 
 @app.get("/api/health")

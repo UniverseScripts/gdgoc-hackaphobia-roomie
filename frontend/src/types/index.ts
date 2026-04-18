@@ -45,3 +45,22 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
 }
+
+export interface ListingHost {
+  name: string;
+  image: string;
+  compatibility: number;
+}
+
+export interface Listing {
+  id: string;
+  title: string;
+  price: number;
+  size: number;
+  location: string;   // maps to district on backend
+  images: string[];
+  fitScore: number;
+  host: ListingHost;
+  features: string[]; // maps to amenities on backend
+  description: string;
+}
