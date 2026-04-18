@@ -45,15 +45,22 @@ async def get_listing_recommendations(authorization: Optional[str] = None):
         # Defensive defaults to prevent Pydantic validation crashes on seeded data
         raw_dict.setdefault('owner_id', 'unknown')
         raw_dict.setdefault('housing_type', 'apartment')
-        raw_dict.setdefault('coordinates', [10.772, 106.664])
         raw_dict.setdefault('district', 'Ho Chi Minh City')
         raw_dict.setdefault('description', '')
+
+        # GeoPoint Synchronization: Convert Firestore objects to standard List[float] before validation
+        coords = raw_dict.get('coordinates', [10.772, 106.664])
+        if hasattr(coords, 'latitude') and hasattr(coords, 'longitude'):
+            coords = [coords.latitude, coords.longitude]
+        raw_dict['coordinates'] = coords  # Re-inject normalized coordinates
 
         try:
             listing_model = ApartmentResponse.model_validate(raw_dict)
             raw_apartments.append((raw_dict, listing_model))
-        except Exception:
-            continue  # Skip malformed documents silently
+        except Exception as e:
+            # Prevent silent failures: Log the exact validation error
+            print(f"CRITICAL: Listing Validation Failed for {item_doc.id} | Error: {e}")
+            continue 
 
     if not raw_apartments:
         return []
@@ -77,18 +84,13 @@ async def get_listing_recommendations(authorization: Optional[str] = None):
         owner_data = owner_map.get(owner_id, {})
         owner_name = owner_data.get('full_name') or owner_data.get('username') or 'Unknown'
 
-        # GeoPoint Synchronization: Convert Firestore objects to standard List[float]
-        coords = raw_dict.get('coordinates', [10.772, 106.664])
-        if hasattr(coords, 'latitude') and hasattr(coords, 'longitude'):
-            coords = [coords.latitude, coords.longitude]
-
         scored_listings.append({
             "id": listing_model.id,
             "title": listing_model.title,
             "price": int(listing_model.price),
             "size": int(listing_model.size),
             "location": listing_model.district,
-            "coordinates": coords,
+            "coordinates": listing_model.coordinates, # Use validated coordinates
             "images": listing_model.images,
             "fitScore": score,
             "host": {
