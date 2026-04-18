@@ -128,15 +128,18 @@
 .header__avatar-link {
   display: inline-flex;
   border-radius: 50%;
-  transition: all 0.18s ease;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              box-shadow 0.25s ease;
+  will-change: transform;
 }
 
 .header__avatar-link:hover {
-  transform: scale(1.07);
-  box-shadow: 0 0 0 3px rgba(246, 157, 24, 0.35);
-  border-radius: 50%;
-  outline: 2.5px solid var(--color-cta);
-  outline-offset: 2px;
+  transform: scale(1.08);
+  box-shadow: 0 0 0 2px white, 0 0 0 5px rgba(246, 157, 24, 0.4);
+}
+
+.header__avatar-link:active {
+  transform: scale(0.95);
 }
 
 .header__user-avatar {

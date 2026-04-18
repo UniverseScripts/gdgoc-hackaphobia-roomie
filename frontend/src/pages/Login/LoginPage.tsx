@@ -30,7 +30,7 @@ const LoginPage = () => {
   const [password, setPassword]       = useState('')
   const [showPass, setShowPass]       = useState(false)
   const [error, setError]             = useState<string | null>(null)
-  const [isRedirecting, setIsRedirecting] = useState(false)
+  const [socialLoading, setSocialLoading] = useState(false)
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -49,15 +49,16 @@ const LoginPage = () => {
     if (redirectError) setError(redirectError)
   }, [redirectError])
 
-  // Bug 1 fix: signInWithRedirect — browser navigates away, no navigate() call needed
+  // signInWithPopup: popup opens, user stays on this page.
+  // On success, onAuthStateChanged fires → useEffect navigates.
   const handleGoogleLogin = async () => {
     try {
       setError(null)
-      setIsRedirecting(true)
+      setSocialLoading(true)
       await loginWithGoogle()
-      // Execution stops here — browser redirects to Google
+      // onAuthStateChanged will fire and useEffect navigates
     } catch (err: any) {
-      setIsRedirecting(false)
+      setSocialLoading(false)
       setError(getFirebaseErrorMessage(err.code))
     }
   }
@@ -65,11 +66,10 @@ const LoginPage = () => {
   const handleFacebookLogin = async () => {
     try {
       setError(null)
-      setIsRedirecting(true)
+      setSocialLoading(true)
       await loginWithFacebook()
-      // Execution stops here — browser redirects to Facebook
     } catch (err: any) {
-      setIsRedirecting(false)
+      setSocialLoading(false)
       setError(getFirebaseErrorMessage(err.code))
     }
   }
@@ -94,10 +94,10 @@ const LoginPage = () => {
   // render nothing while the navigation useEffect fires on the next tick
   if (user) return null
 
-  if (isRedirecting) {
+  if (socialLoading) {
     return (
       <div className="login-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: '#6b7280', fontSize: '1rem' }}>Đang chuyển hướng đến trang đăng nhập...</p>
+        <p style={{ color: '#6b7280', fontSize: '1rem' }}>Đang xác thực...</p>
       </div>
     )
   }

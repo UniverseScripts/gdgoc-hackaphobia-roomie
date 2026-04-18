@@ -4,8 +4,7 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
 } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, googleProvider, facebookProvider, signOut, db } from "../lib/firebase";
@@ -46,66 +45,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [redirectError, setRedirectError] = useState<string | null>(null);
 
   useEffect(() => {
-    let authUnsubscribe: (() => void) | null = null;
-
-    const init = async () => {
-      // ── CRITICAL: Await the redirect result BEFORE subscribing to onAuthStateChanged.
-      // If we subscribe first, onAuthStateChanged fires with null (no cached user yet),
-      // setLoading(false) is called, LoginPage renders with user=null, and the redirect
-      // user is never surfaced to the route layer.
-      try {
-        await getRedirectResult(auth);
-      } catch (error: any) {
-        if (error.code === 'auth/account-exists-with-different-credential') {
-          setRedirectError('Email này đã đăng ký qua Google. Vui lòng dùng Google để đăng nhập.');
-        }
-      }
-
-      // ── Auth state is now settled (post-redirect). Subscribe.
-      authUnsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-        setUser(currentUser);
-        if (currentUser) {
-          try {
-            const docRef = doc(db, 'users', currentUser.uid);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-              const data = docSnap.data();
-              setUserProfile({
-                ...data,
-                role: data.role || 'customer',
-                id: currentUser.uid
-              } as UserProfile);
-            } else {
-              // New user — no Firestore doc yet, create a minimal profile stub
-              setUserProfile({
-                id: currentUser.uid,
-                role: 'customer',
-                username: currentUser.displayName || 'User',
-                email: currentUser.email || '',
-                profile_completed: false
-              });
-            }
-          } catch (error) {
-            console.error("Failed to fetch user profile:", error);
+    // ── Subscribe to auth state. signInWithPopup resolves in the same page
+    // context, so onAuthStateChanged fires immediately after popup closes.
+    const authUnsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        try {
+          const docRef = doc(db, 'users', currentUser.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setUserProfile({
+              ...data,
+              role: data.role || 'customer',
+              id: currentUser.uid
+            } as UserProfile);
+          } else {
+            // New user — no Firestore doc yet, create a minimal profile stub
+            setUserProfile({
+              id: currentUser.uid,
+              role: 'customer',
+              username: currentUser.displayName || 'User',
+              email: currentUser.email || '',
+              profile_completed: false
+            });
           }
-        } else {
-          setUserProfile(null);
+        } catch (error) {
+          console.error("Failed to fetch user profile:", error);
         }
-        setLoading(false);
-      });
-    };
+      } else {
+        setUserProfile(null);
+      }
+      setLoading(false);
+    });
 
-    init();
-
-    return () => { authUnsubscribe?.(); };
+    return () => { authUnsubscribe(); };
   }, []);
 
   const loginWithGoogle = async () => {
-    await signInWithRedirect(auth, googleProvider);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error: any) {
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        setRedirectError('Email này đã đăng ký qua phương thức khác. Vui lòng dùng Google để đăng nhập.');
+      }
+      throw error;
+    }
   };
 
   const loginWithFacebook = async () => {
-    await signInWithRedirect(auth, facebookProvider);
+    try {
+      await signInWithPopup(auth, facebookProvider);
+    } catch (error: any) {
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        setRedirectError('Email này đã đăng ký qua Google. Vui lòng dùng Google để đăng nhập.');
+      }
+      throw error;
+    }
   };
 
   const logout = async () => {
