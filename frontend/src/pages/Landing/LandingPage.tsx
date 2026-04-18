@@ -4,6 +4,7 @@ import { authenticatedFetch } from '../../lib/api'
 import Header from '../../components/Header'
 import Footer from '../../components/Footer'
 import './LandingPage.css'
+import logoExtended from '../../assets/logo_extended_stroke.png'
 
 /* ── Data ── */
 const FEATURED_AREAS = [
@@ -64,11 +65,7 @@ const LandingPage = () => {
       <section className="hero" aria-label="Hero section">
         <div className="hero__overlay" />
         <div className="hero__content">
-          <h1 className="hero__title">
-            Tìm nhà trọ chuẩn,<br />
-            Chọn bạn trọ chất!
-          </h1>
-          <p className="hero__subtitle">Nền tảng dành riêng cho sinh viên Đại học</p>
+          <img src={logoExtended} alt="Khoảng trời riêng của sinh viên" className="hero__logo-extended" />
 
           {/* Search Widget */}
           <div className="search-widget" role="search">
