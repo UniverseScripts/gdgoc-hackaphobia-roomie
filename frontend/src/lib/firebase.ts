@@ -2,7 +2,11 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-const firebaseConfig = {
+// ─── Firebase Configuration ───
+// We prioritize an aggregated config string for CI/CD robustness, 
+// with a categorical fallback to individual variables for local dev.
+const configRaw = import.meta.env.VITE_FIREBASE_CONFIG;
+const firebaseConfig = configRaw ? JSON.parse(configRaw) : {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
