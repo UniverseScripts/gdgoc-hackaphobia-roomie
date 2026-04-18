@@ -58,6 +58,7 @@ export interface Listing {
   price: number;
   size: number;
   location: string;   // maps to district on backend
+  coordinates: number[];
   images: string[];
   fitScore: number;
   host: ListingHost;

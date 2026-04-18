@@ -21,9 +21,8 @@ function PropertyDetailPanel({ listing, onClose }: { listing: Listing; onClose: 
   const prevSlide = () => setSlideIdx(i => (i - 1 + listing.images.length) % listing.images.length)
   const nextSlide = () => setSlideIdx(i => (i + 1) % listing.images.length)
 
-  // Coordinates not in ListingSchema — default to Ho Chi Minh City centre
-  const lat = 10.772;
-  const lng = 106.664;
+  // Use dynamic coordinates or default to city centre
+  const [lat, lng] = listing.coordinates || [10.772, 106.664];
   const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
 
   return (
@@ -213,7 +212,6 @@ export default function ListingsPage() {
       `)
       .addTo(markerLayer)
 
-    // ListingSchema has no coordinates — markers use city centre default
     listings.forEach(item => {
       const priceLabel = toCompactPriceLabel(item.price)
       const priceMarkerIcon = L.divIcon({
@@ -222,7 +220,11 @@ export default function ListingsPage() {
         popupAnchor: [-8, -40]
       })
 
-      const marker = L.marker([10.772, 106.664], { icon: priceMarkerIcon })
+      const markerCoords: L.LatLngTuple = (item.coordinates && item.coordinates.length === 2) 
+        ? [item.coordinates[0], item.coordinates[1]] 
+        : [10.772, 106.664];
+
+      const marker = L.marker(markerCoords, { icon: priceMarkerIcon })
         .bindPopup(
           `<div class="listing-popup">
             <strong>${item.title}</strong>
