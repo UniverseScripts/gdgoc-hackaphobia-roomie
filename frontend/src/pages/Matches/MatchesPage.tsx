@@ -102,7 +102,6 @@ export default function MatchesPage() {
 
                 // Background cards: scale down + shift up slightly
                 const scale = 1 - stackIndex * 0.05;
-                const translateY = stackIndex * -12;
                 const zIndex = 10 - stackIndex;
 
                 return (
