@@ -7,6 +7,8 @@
   transition: transform var(--transition), box-shadow var(--transition);
   display: flex;
   flex-direction: column;
+  position: relative;
+  will-change: transform;
 }
 
 .match-card:hover {
@@ -43,6 +45,37 @@
   font-size: 14px;
   box-shadow: 0 4px 12px rgba(246, 157, 24, 0.35);
   font-family: var(--font-body);
+}
+
+.match-card__overlay {
+  position: absolute;
+  top: 30px;
+  padding: 8px 16px;
+  border: 4px solid;
+  border-radius: var(--radius-md);
+  color: white;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transform: rotate(-15deg);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.match-card__overlay--like {
+  left: 30px;
+  color: #10b981;
+  border-color: #10b981;
+  transform: rotate(-15deg);
+}
+
+.match-card__overlay--nope {
+  right: 30px;
+  color: #ef4444;
+  border-color: #ef4444;
+  transform: rotate(15deg);
 }
 
 .match-card__content {

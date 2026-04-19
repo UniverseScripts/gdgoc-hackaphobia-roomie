@@ -36,8 +36,7 @@
 .header__logo img {
   height: 100px;
   width: auto;
-/*   object-fit: contain;
- */}
+}
 
 /* ── Nav ── */
 .header__nav {

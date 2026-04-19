@@ -1,5 +1,7 @@
 .matches-layout {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background-color: var(--color-bg);
   padding-bottom: 80px;
 }
@@ -44,10 +46,14 @@
   background: #fdfdfd;
 }
 
-.matches-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 32px;
+.matches-tinder-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  position: relative;
+  overflow: hidden; /* prevents scrollbars during swipe */
+  padding: 20px;
 }
 
 @media (max-width: 768px) {
