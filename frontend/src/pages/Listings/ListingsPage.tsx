@@ -164,53 +164,73 @@ export default function ListingsPage() {
   }, [])
 
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
-  const mapRef = useRef<L.Map | null>(null)
-  const markerGroupRef = useRef<L.LayerGroup | null>(null)
-  const markerByIdRef = useRef<Record<string, L.Marker>>({})
-  const mapCenter = useMemo<L.LatLngTuple>(() => [10.7769, 106.7009], [])
+  const mapRef          = useRef<L.Map | null>(null)
+  const markerGroupRef  = useRef<L.LayerGroup | null>(null)
+  const markerByIdRef   = useRef<Record<string, L.Marker>>({})
+  const mapCenter       = useMemo<L.LatLngTuple>(() => [10.7769, 106.7009], [])
 
+  // ── Map initialization ──
+  // Plain useEffect so `mapContainerRef.current` is read AFTER the DOM is mounted.
+  // Handles React StrictMode double-invocation by clearing _leaflet_id before re-init.
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return
+    const container = mapContainerRef.current
+    if (!container) return
 
-    const map = L.map(mapContainerRef.current, {
-      center: mapCenter,
-      zoom: 13,
-      zoomControl: false
-    })
+    // Tear down any previous instance (StrictMode remount / hot-reload)
+    if (mapRef.current) {
+      mapRef.current.remove()
+      mapRef.current = null
+      markerGroupRef.current = null
+      markerByIdRef.current = {}
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(container as any)._leaflet_id = null
 
+    const map = L.map(container, { center: mapCenter, zoom: 13, zoomControl: false })
     mapRef.current = map
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19,
     }).addTo(map)
 
     const markerLayer = L.layerGroup().addTo(map)
     markerGroupRef.current = markerLayer
 
-    // ── Đánh dấu trường học (University Pinpoint) ──
-    const universityPos: L.LatLngTuple = [10.771964, 106.657920]
+    // University pin
     const schoolIcon = L.divIcon({
       className: 'school-marker-wrapper',
-      html: `
-        <div class="school-marker" title="Trường Đại học Bách khoa TP.HCM">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m22 10-10-5L2 10l10 5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/><path d="M11 22v-5"/>
-          </svg>
-        </div>
-      `,
-      iconSize: [44, 44],
-      iconAnchor: [22, 22],
-      popupAnchor: [-22, -44]
+      html: `<div class="school-marker" title="ĐH Bách Khoa TP.HCM">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m22 10-10-5L2 10l10 5Z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/><path d="M11 22v-5"/>
+        </svg></div>`,
+      iconSize: [44, 44], iconAnchor: [22, 22], popupAnchor: [-22, -44],
     })
-
-    L.marker(universityPos, { icon: schoolIcon, zIndexOffset: 1000 })
-      .bindPopup(`
-        <div class="listing-popup">
-          <strong style="color: var(--color-primary)">📍 Trường học của bạn</strong>
-          <div style="margin-top: 1px; font-weight: 600;">Trường Đại học Bách khoa TP.HCM</div>
-        </div>
-      `)
+    L.marker([10.771964, 106.657920], { icon: schoolIcon, zIndexOffset: 1000 })
+      .bindPopup(`<div class="listing-popup"><strong>📍 Trường Đại học Bách Khoa TP.HCM</strong></div>`)
       .addTo(markerLayer)
+
+    return () => {
+      map.remove()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(container as any)._leaflet_id = null
+      mapRef.current = null
+      markerGroupRef.current = null
+      markerByIdRef.current = {}
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // intentionally empty — runs once after mount
+
+  // ── Render listing markers (re-runs when listings data arrives) ──
+  useEffect(() => {
+    const markerLayer = markerGroupRef.current
+    if (!markerLayer || listings.length === 0) return
+
+    // Clear old listing markers (keep school marker by tracking IDs)
+    Object.values(markerByIdRef.current).forEach(m => markerLayer.removeLayer(m))
+    markerByIdRef.current = {}
+
+    const bounds: L.LatLngTuple[] = []
 
     listings.forEach(item => {
       const priceLabel = toCompactPriceLabel(item.price)
@@ -220,9 +240,9 @@ export default function ListingsPage() {
         popupAnchor: [-8, -40]
       })
 
-      const markerCoords: L.LatLngTuple = (item.coordinates && item.coordinates.length === 2) 
-        ? [item.coordinates[0], item.coordinates[1]] 
-        : [10.772, 106.664];
+      const markerCoords: L.LatLngTuple = (item.coordinates && item.coordinates.length === 2)
+        ? [item.coordinates[0], item.coordinates[1]]
+        : [10.772, 106.664]
 
       const marker = L.marker(markerCoords, { icon: priceMarkerIcon })
         .bindPopup(
@@ -233,15 +253,14 @@ export default function ListingsPage() {
         )
         .addTo(markerLayer)
       markerByIdRef.current[item.id] = marker
+      bounds.push(markerCoords)
     })
 
-    return () => {
-      markerLayer.clearLayers()
-      markerByIdRef.current = {}
-      map.remove()
-      mapRef.current = null
+    // Auto-fit map to show all markers
+    if (bounds.length > 0 && mapRef.current) {
+      mapRef.current.fitBounds(L.latLngBounds(bounds), { padding: [50, 50], maxZoom: 15 })
     }
-  }, [mapCenter])
+  }, [listings])
 
   // Khi panel mở/tắt, báo Leaflet re-render tile để tránh vùng xám
   useEffect(() => {
@@ -280,8 +299,14 @@ export default function ListingsPage() {
     return (
       <div className="listings-layout">
         <Header />
-        <main className="listings-main" style={{display:'flex',justifyContent:'center',alignItems:'center'}}>
-          <div style={{ padding: '2rem', color: '#6b7280' }}>Đang tải danh sách phòng...</div>
+        <main className="listings-main">
+          <aside className="listings-sidebar" style={{display:'flex',justifyContent:'center',alignItems:'center'}}>
+            <span style={{ color: '#6b7280', padding: '2rem' }}>Đang tải danh sách phòng...</span>
+          </aside>
+          {/* Map container must always be in DOM for Leaflet useEffect to attach */}
+          <div className="listings-map-area">
+            <div ref={mapContainerRef} className="leaflet-map-canvas" />
+          </div>
         </main>
       </div>
     );
@@ -291,10 +316,15 @@ export default function ListingsPage() {
     return (
       <div className="listings-layout">
         <Header />
-        <main className="listings-main" style={{display:'flex',justifyContent:'center',alignItems:'center'}}>
-          <div style={{ background: '#fee2e2', color: '#991b1b', padding: '1.5rem', borderRadius: '8px', border: '1px solid #f87171' }}>
-            <h2 style={{ marginBottom: '1rem', fontWeight: 'bold' }}>SYSTEM HALTED</h2>
-            <p>{error}</p>
+        <main className="listings-main">
+          <aside className="listings-sidebar" style={{display:'flex',justifyContent:'center',alignItems:'center',padding:'2rem'}}>
+            <div style={{ background: '#fee2e2', color: '#991b1b', padding: '1.5rem', borderRadius: '8px', border: '1px solid #f87171' }}>
+              <h2 style={{ marginBottom: '1rem', fontWeight: 'bold' }}>Lỗi tải dữ liệu</h2>
+              <p>{error}</p>
+            </div>
+          </aside>
+          <div className="listings-map-area">
+            <div ref={mapContainerRef} className="leaflet-map-canvas" />
           </div>
         </main>
       </div>

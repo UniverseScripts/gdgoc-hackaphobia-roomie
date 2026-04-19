@@ -210,11 +210,12 @@
   inset: 0;
 }
 
-.leaflet-map-canvas .leaflet-pane,
-.leaflet-map-canvas .leaflet-control,
+/* Do NOT override Leaflet's internal z-index layers —
+   each pane (tile, shadow, marker, popup) needs its own stack order.
+   Only ensure the canvas sits within our layout stacking context. */
 .leaflet-map-canvas .leaflet-top,
 .leaflet-map-canvas .leaflet-bottom {
-  z-index: 1;
+  z-index: 5;
 }
 
 .price-marker-wrapper {
