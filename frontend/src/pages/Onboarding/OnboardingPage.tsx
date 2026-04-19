@@ -28,7 +28,7 @@ const OnboardingPage = () => {
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const data = await authenticatedFetch('api/onboarding/status')
+        const data = await authenticatedFetch('/api/onboarding/status')
         if (data.profile_completed) {
           navigate('/', { replace: true })
         }
@@ -71,7 +71,7 @@ const OnboardingPage = () => {
       }
 
       // 3. Transmit
-      await authenticatedFetch('api/onboarding/profile', {
+      await authenticatedFetch('/api/onboarding/profile', {
         method: 'POST',
         body: JSON.stringify(basePayload)
       })
