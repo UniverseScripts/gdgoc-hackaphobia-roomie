@@ -51,7 +51,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 40px;
   padding-top: 20px;
 }
 
@@ -91,6 +91,7 @@
   font-weight: 600;
   letter-spacing: 0.3px;
   user-select: none;
+  margin-top: 20px; /* Extra breathing room from the offset cards */
 }
 
 /* ─── EMPTY STATE ────────────────────────────────────────── */
