@@ -1,16 +1,15 @@
 import json
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
-from typing import Annotated, List, Dict
-from pydantic import BaseModel      
+from pydantic import BaseModel
 from datetime import datetime, timezone
-from starlette import status
-from google.cloud.firestore_v1.base_query import FieldFilter, Or
 from google.cloud import firestore
-
+from firebase_admin import auth as firebase_auth
+from google.cloud.firestore_v1.base_query import FieldFilter, Or
+from typing import Annotated, Dict, List
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from starlette import status
 from services.chat_manager import manager
 from core.config import db
-from routers.auth import get_current_user
-from firebase_admin import auth as firebase_auth
+from services.auth import get_current_user
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 

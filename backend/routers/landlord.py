@@ -1,15 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
-from typing import Dict, Any
+from fastapi import APIRouter, HTTPException, status, Depends
 
 from core.config import db
 from services.auth import verify_landlord_claim
 from schemas.landlord import LeaseRequest, AdsRequest, PendingApartmentCreate, PendingApartmentResponse
 
-router = APIRouter(prefix="/landlord", tags=["Landlord"])
+router = APIRouter(prefix="/landlord", tags=["Landlord"], dependencies=[Depends(verify_landlord_claim)])
 
 @router.post("/lease/request/{id}", status_code=status.HTTP_201_CREATED)
-async def create_lease_request(id: str, payload: LeaseRequest, claim: dict = Depends(verify_landlord_claim)):
+async def create_lease_request(id: str, payload: LeaseRequest):
     """
     Ingest a lease application configured by the landlord.
     """
@@ -21,7 +19,7 @@ async def create_lease_request(id: str, payload: LeaseRequest, claim: dict = Dep
 
 
 @router.post("/ads/request/{id}", status_code=status.HTTP_201_CREATED)
-async def create_ad_request(id: str, payload: AdsRequest, claim: dict = Depends(verify_landlord_claim)):
+async def create_ad_request(id: str, payload: AdsRequest):
     """
     Ingest an advertisement promotion request.
     """

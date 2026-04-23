@@ -3,8 +3,8 @@ from typing import Annotated, Union
 from firebase_admin import auth as firebase_auth
 
 from core.config import db
-from routers.auth import get_current_user
-from schemas.user import CustomerUserStore, LandlordUserStore
+from services.auth import get_current_user
+from schemas.user import CustomerUserStore, LandlordUserStore, UserResponse
 
 router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
 
@@ -32,17 +32,15 @@ async def update_profile(
 
 @router.get("/profile")
 async def get_profile(current_user: Annotated[dict, Depends(get_current_user)]):
-    return {
-        "username": current_user.get('username'),
-        "full_name": current_user.get('full_name'),
-        "age": current_user.get('age'),
-        "university": current_user.get('university'),
-        "major": current_user.get('major'),
-        "bio": current_user.get('bio'),
-        "gender": current_user.get('gender'),
-        "business_id": current_user.get('business_id'),
-        "business_name": current_user.get('business_name')
-    }
+    return UserResponse(
+        username=current_user.get('username'),
+        full_name=current_user.get('full_name'),
+        age=current_user.get('age'),
+        university=current_user.get('university'),
+        gender=current_user.get('gender'),
+        business_id=current_user.get('business_id'),
+        role=current_user.get('role')
+    )
     
 @router.get("/status")
 async def get_onboarding_status(

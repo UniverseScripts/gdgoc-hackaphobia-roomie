@@ -32,3 +32,10 @@ class TestVectorSchema(BaseModel):
     vector_data_embeddings: list[float]
     is_completed: bool = False
     updated_at: Optional[datetime] = None
+
+class SponsorRequest(BaseModel):
+    sponsor_name: str
+    target_audience: str
+    budget: float = Field(..., gt=0)
+    campaign_duration_days: int = Field(..., gt=0)
+    status: str = "pending"

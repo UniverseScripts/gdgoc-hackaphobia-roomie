@@ -10,13 +10,13 @@ class ApartmentBase(BaseModel):
     description: str
     size: float
     district: str
-    address: Optional[str] = None
-    images: List[str] = []
-    amenities: List[str] = []
+    address: str
+    images: List[str]
+    amenities: List[str]
     embedding: Optional[List[float]] = None
-    availability: bool = True
-    average_rating: float = 0.0
-    total_reviews: int = 0
+    availability: bool
+    average_stars: float
+    total_comments: int
 
 class ApartmentCreate(ApartmentBase):
     pass
