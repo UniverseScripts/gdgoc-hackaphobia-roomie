@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, status
-import jwt
 from datetime import datetime, timezone, timedelta
+import jwt
+from fastapi import APIRouter, HTTPException, status, Depends
 from core.config import db, settings
-from schemas.rbac_customer.sponsor import SponsorRequest
+from services.auth import verify_customer_claim
+from schemas.customer import SponsorRequest
 
-router = APIRouter(prefix="/sponsor", tags=["Sponsor"])
+router = APIRouter(prefix="/sponsor", tags=["Sponsor"], dependencies=[Depends(verify_customer_claim)])
 
 @router.post("/request/{id}", status_code=status.HTTP_201_CREATED)
 async def create_sponsor_request(id: str, payload: SponsorRequest):
@@ -13,7 +14,7 @@ async def create_sponsor_request(id: str, payload: SponsorRequest):
     """
     doc_ref = db.collection("sponsors").document(id)
     doc_data = payload.model_dump()
-    doc_data["status"] = "pending" # Enforce initial status as demanded
+    doc_data["status"] = "pending"
     doc_ref.set(doc_data)
     
     return {"message": "Sponsorship created successfully", "id": id, "data": doc_data}

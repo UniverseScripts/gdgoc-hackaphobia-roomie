@@ -3,10 +3,10 @@ from services.auth import verify_admin_claim
 from services.vector_logic import generate_semantic_vector
 from core.config import db
 
-router = APIRouter(prefix="/admin", tags=["admin"])
+router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(verify_admin_claim)])
 
 @router.post("/properties/approve/{property_id}")
-def approve_staged_property(property_id: str, current_admin: dict = Depends(verify_admin_claim)):
+def approve_staged_property(property_id: str):
     """
     Approve a staged property, generate its vector, and atomically move it to the active inventory.
     """

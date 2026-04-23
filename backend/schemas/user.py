@@ -16,15 +16,10 @@ class UserBase(BaseModel):
 
 class CustomerUserStore(UserBase):
     role: Literal[Role.CUSTOMER] = Role.CUSTOMER
-    university: str
-    major: Optional[str] = None
-    bio: Optional[str] = None
 
 class LandlordUserStore(UserBase):
     role: Literal[Role.LANDLORD] = Role.LANDLORD
     business_id: str
-    business_name: Optional[str] = None
-    bio: Optional[str] = None
 
 class UserResponse(BaseModel):
     id: str
@@ -37,7 +32,4 @@ class UserResponse(BaseModel):
     profile_completed: bool = False
     
     university: Optional[str] = None
-    major: Optional[str] = None
     business_id: Optional[str] = None
-    business_name: Optional[str] = None
-    bio: Optional[str] = None

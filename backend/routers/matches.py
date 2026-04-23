@@ -1,18 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional, Annotated
 from pydantic import BaseModel
-
+from typing import Annotated, List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status
 from core.config import db
-from routers.auth import get_current_user
-from services.auth import verify_customer_claim
-
+from services.auth import get_current_user, verify_customer_claim
 from services.matching import (
     calculate_cosine_similarity, 
     calculate_match_score,
     get_candidate_vectors # You will need to update this service file to query Firestore too!
 )
 
-router = APIRouter(prefix="/matches", tags=["Matches"])
+router = APIRouter(prefix="/matches", tags=["Matches"], dependencies=[Depends(verify_customer_claim)])
 
 class MatchProfileSchema(BaseModel):
     user_id: str
